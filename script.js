@@ -415,6 +415,7 @@ function performSearch() {
         noResults.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary');
         searchResults.appendChild(noResults);
     }
+    searchModal.classList.add('active');
 }
 
 function addSearchResultItem(link, index) {
@@ -855,10 +856,26 @@ document.addEventListener('mousemove', () => {
 });
 
 document.addEventListener('keydown', (event) => {
-    const results = searchResults.querySelectorAll('.search-result-item');
-    const hasResults = results.length > 0;
+    const hasResults = searchResults.children.length > 0;
+    const isFocusedOnInput = document.activeElement === searchInput;
+    const isModifierPressed = event.ctrlKey || event.metaKey || event.altKey;
 
-    if (searchModal.classList.contains('active')) {
+    // Handle search modal activation
+    if (event.key === '/' && !isModifierPressed && !isFocusedOnInput) {
+        event.preventDefault();
+        openSearchModal();
+        searchInput.value = ''; // Clear previous input
+    }
+    
+    // Handle character input after modal is open
+    if (searchModal.classList.contains('active') && !isModifierPressed) {
+        // Allow normal typing in search input
+        if (event.key.length === 1 && !event.altKey && !event.ctrlKey) {
+            searchInput.focus();
+            return; // Let the default input handling occur
+        }
+    }
+    if (searchModal.classList.contains('active') && hasResults) {
         switch(event.key) {
             case 'ArrowDown':
             case 'ArrowUp':
