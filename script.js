@@ -917,10 +917,7 @@ document.addEventListener('keydown', (event) => {
      openSearchModal();
      searchInput.value = event.key.toLowerCase();
      searchInput.focus();
-     performSearch(); // Immediately perform first search
-     
-     // Create a new input event to trigger the debounced listener for subsequent typing
-     searchInput.dispatchEvent(new Event('input'));
+     performSearch(); // Immediately perform search instead of debouncing
  }
     else if (event.key === 'Escape') {
         closeSearchModal();
