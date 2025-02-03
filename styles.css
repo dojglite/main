@@ -4,8 +4,8 @@
         }
 
 @font-face {
-            font-family: 'BIZ UDGothic';
-            src: url('BIZUDGothic.ttf') format('truetype');
+            font-family: 'BIZUDGothic-Regular';
+            src: url('BIZUDGothic-Regular.ttf') format('truetype');
         }
 
         /* --- Root Variables (CSS Custom Properties) --- */
@@ -1634,7 +1634,7 @@
     padding: 0.25rem 0.75rem;
     border-radius: 6px;
     font-size: 1.2rem;
-    font-family: 'BIZ UDGothic', monospace;
+    font-family: 'BIZUDGothic-Regular', monospace;
 }
 
 .feature-detail {
