@@ -499,19 +499,23 @@ function highlightAndScrollToCell(link) {
 
 
 // --- Modal Functions ---
-function openSearchModal(initialValue = '') {  // Add parameter with default empty string
+function openSearchModal(initialValue = '') {
     console.log('Starting openSearchModal function');
     console.log('searchModal exists:', !!searchModal);
     console.log('searchInput exists:', !!searchInput);
+    console.log('Initial value:', initialValue);  // Add this
     
     searchModal.classList.add('active');
-    searchInput.focus();
     
-    if (initialValue) {  // If we have an initial value
+    if (initialValue) {
+        console.log('Setting value to:', initialValue);  // Add this
         searchInput.value = initialValue;
+        console.log('Value after setting:', searchInput.value);  // Add this
         searchInput.dispatchEvent(new Event('input'));
+        console.log('Event dispatched');  // Add this
     }
     
+    searchInput.focus();
     searchModal.setAttribute('aria-hidden', 'false');
     document.getElementById('main-content').setAttribute('aria-hidden', 'true');
     
@@ -965,5 +969,11 @@ helpModal.addEventListener('click', (e) => {
 // Prevent context menu on modal
 helpModal.addEventListener('contextmenu', (e) => {
     e.preventDefault();
+    });
+
+searchInput.addEventListener('input', function() {
+        console.log('Input event fired. Current value:', this.value);  // Add this
+        selectedResultIndex = -1;
+        debouncedSearch();
     });
 });
