@@ -848,33 +848,66 @@ function updateScrollProgressIndicator() {
 function navigateWithTransition(event) {
     event.preventDefault();
     const targetUrl = event.currentTarget.href;
+    
+    // Create transition elements
     const transitionContainer = document.createElement('div');
     transitionContainer.className = 'transition-container';
     document.body.appendChild(transitionContainer);
-
-    // Add exit animations to columns
-    const columns = document.querySelectorAll('.column');
-    columns.forEach((column, index) => {
-        column.classList.add(
-            index === 0 ? 'exit-left' :
-            index === 1 ? 'exit-middle' : 'exit-right'
-        );
-    });
 
     // Add overlay
     const overlay = document.createElement('div');
     overlay.className = 'transition-overlay';
     document.body.appendChild(overlay);
 
-    // Trigger overlay fade
-    setTimeout(() => {
-        overlay.style.opacity = '1';
-    }, 100);
+    // Add exit animations to columns
+    const columns = document.querySelectorAll('.column');
+    let animationsCompleted = 0;
+    const totalAnimations = columns.length;
 
-    // Navigate after animations
+    // Function to check if all animations are done
+    const checkAnimationsComplete = () => {
+        animationsCompleted++;
+        if (animationsCompleted >= totalAnimations) {
+            // All animations complete, now fade in overlay and navigate
+            requestAnimationFrame(() => {
+                overlay.style.opacity = '1';
+                
+                // Wait for overlay fade to complete before navigation
+                setTimeout(() => {
+                    window.location.href = targetUrl;
+                }, 200); // Match this with your overlay transition duration
+            });
+        }
+    };
+
+    // Add animation end listeners to each column
+    columns.forEach((column, index) => {
+        const animationClass = index === 0 ? 'exit-left' :
+                             index === 1 ? 'exit-middle' : 'exit-right';
+        
+        // Clone the column to prevent animation interruption
+        const clonedColumn = column.cloneNode(true);
+        column.parentNode.replaceChild(clonedColumn, column);
+        
+        clonedColumn.classList.add(animationClass);
+        
+        // Listen for both animation end events
+        const handleAnimationEnd = (e) => {
+            if (e.animationName === 'columnExit' || e.animationName === 'columnFade') {
+                checkAnimationsComplete();
+                clonedColumn.removeEventListener('animationend', handleAnimationEnd);
+            }
+        };
+        
+        clonedColumn.addEventListener('animationend', handleAnimationEnd);
+    });
+
+    // Backup timeout in case animations fail
     setTimeout(() => {
-        window.location.href = targetUrl;
-    }, 100);
+        if (animationsCompleted < totalAnimations) {
+            window.location.href = targetUrl;
+        }
+    }, 1000); // Fallback timeout
 }
 
 // --- Shift+Click Range Selection Function ---
