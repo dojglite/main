@@ -3,6 +3,11 @@
             src: url('FOT-TsukuMinPr6N-R.otf') format('opentype');
         }
 
+@font-face {
+            font-family: 'BIZ UDGothic';
+            src: url('BIZUDGothic.ttf') format('truetype');
+        }
+
         /* --- Root Variables (CSS Custom Properties) --- */
         :root {
             --primary: #6B46E5;
@@ -1622,8 +1627,6 @@
     color: var(--text-primary);
     font-size: 1.2rem;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&display=swap');
 
 .shortcut-key {
     background: rgba(124, 77, 255, 0.1);
