@@ -875,7 +875,7 @@ function navigateWithTransition(event) {
                 // Wait for overlay fade to complete before navigation
                 setTimeout(() => {
                     window.location.href = targetUrl;
-                }, 400); // Match this with your overlay transition duration
+                }, 300); 
             });
         }
     };
