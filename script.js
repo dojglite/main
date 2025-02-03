@@ -710,26 +710,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add wheel event handler for modal scrolling
     document.addEventListener('wheel', (e) => {
-    if (searchModal.classList.contains('active')) {
-        const scrollContainer = searchResults; // Use the correctly cached searchResults
-
-        // Check if we're directly interacting with the scroll container
+     // Search Modal handling
+     if (searchModal.classList.contains('active')) {
+        const scrollContainer = searchResults;
         const isInScrollArea = scrollContainer.contains(e.target) ||
                               e.target === scrollContainer;
-
-        // Calculate container metrics
         const hasScrollSpace = scrollContainer.scrollHeight > scrollContainer.clientHeight;
         const atTop = scrollContainer.scrollTop === 0;
         const atBottom = scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight;
 
         if (isInScrollArea && hasScrollSpace) {
-            // Allow native scrolling in most cases
             if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
-                e.preventDefault(); // Prevent scroll bleed-through at top/bottom
+                e.preventDefault();
             }
         } else if (searchModal.contains(e.target)) {
-            // Prevent main page scrolling when mouse is over modal backdrop
-            e.preventDefault(); // Only prevent default scrolling on the modal backdrop, not inside search results
+            e.preventDefault();
+        }
+    }
+
+    // Help Modal handling
+    if (helpModal.classList.contains('active')) {
+        const helpContent = helpModal.querySelector('.help-content');
+        const isInHelpArea = helpContent && (helpContent.contains(e.target) || e.target === helpContent);
+        
+        if (!isInHelpArea) {
+            e.preventDefault(); // Prevent background scroll when not in help content
         }
     }
 }, { passive: false });
@@ -943,9 +948,11 @@ document.addEventListener('contextmenu', (event) => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'F1' || e.key === 'Help') {
         e.preventDefault(); // Prevent default F1 behavior
-        showHelpModal();
-    } else if (e.key === 'Escape' && helpModal.classList.contains('active')) {
-        hideHelpModal();
+        if (helpModal.classList.contains('active')) {
+            hideHelpModal();
+        } else {
+            showHelpModal();
+        }
     }
 });
 
