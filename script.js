@@ -860,21 +860,22 @@ document.addEventListener('keydown', (event) => {
     const isFocusedOnInput = document.activeElement === searchInput;
     const isModifierPressed = event.ctrlKey || event.metaKey || event.altKey;
 
-    // Handle search modal activation
+    // Handle forward slash shortcut
     if (event.key === '/' && !isModifierPressed && !isFocusedOnInput) {
         event.preventDefault();
         openSearchModal();
-        searchInput.value = ''; // Clear previous input
+        searchInput.value = ''; // Clears previous input
+        return;
     }
-    
-    // Handle character input after modal is open
-    if (searchModal.classList.contains('active') && !isModifierPressed) {
-        // Allow normal typing in search input
-        if (event.key.length === 1 && !event.altKey && !event.ctrlKey) {
-            searchInput.focus();
-            return; // Let the default input handling occur
-        }
+
+    // Handle Ctrl+F shortcut
+    if (event.ctrlKey && event.key === 'f') {
+        event.preventDefault();
+        openSearchModal();
+        return;
     }
+
+    // Handle arrow key navigation in search results
     if (searchModal.classList.contains('active') && hasResults) {
         switch(event.key) {
             case 'ArrowDown':
@@ -886,7 +887,6 @@ document.addEventListener('keydown', (event) => {
                 
                 event.preventDefault();
                 if (selectedResultIndex === -1) {
-                    // If nothing is selected, select first item regardless of arrow direction
                     selectedResultIndex = 0;
                 } else {
                     if (event.key === 'ArrowDown') {
@@ -898,7 +898,7 @@ document.addEventListener('keydown', (event) => {
                 updateResultSelection(isArrowKeyHeld);
                 break;
 
-                case 'Enter':
+            case 'Enter':
                 if (selectedResultIndex > -1 && results[selectedResultIndex]) {
                     results[selectedResultIndex].querySelector('a').click();
                 }
@@ -906,24 +906,22 @@ document.addEventListener('keydown', (event) => {
         }
     }
 
-    if (event.ctrlKey && event.key === 'f') { 
-        event.preventDefault(); 
-        openSearchModal(); 
-    }
-    else if (event.key.length === 1 && 
-           !event.ctrlKey && 
-           !event.metaKey && 
-           !event.altKey && 
-           !event.target.closest('input, textarea, [contenteditable]') && 
-           !searchModal.classList.contains('active')) {
+    // Handle character input (both for opening modal and typing in search)
+    if (event.key.length === 1 && 
+        !isModifierPressed && 
+        !event.target.closest('input, textarea, [contenteditable]')) {
         
         event.preventDefault();
-        openSearchModal();
-        searchInput.value = event.key.toLowerCase();
+        
+        // If modal isn't open, open it first
+        if (!searchModal.classList.contains('active')) {
+            openSearchModal();
+        }
+        
+        // Focus and update input
+        searchInput.focus();
+        searchInput.value += event.key.toLowerCase();
         debouncedSearch();
-    }
-    else if (event.key === 'Escape') {
-        closeSearchModal();
     }
 });
 
