@@ -30,7 +30,7 @@ const CONFIG = {
     }
 };
 
-fetch('./grammar/dojg_pages/romaji-to-japanese-map.json')  // Updated path
+fetch('./romaji-to-japanese-map.json')
     .then(response => {
         if (!response.ok) {
             throw new Error('Failed to load romaji map');
