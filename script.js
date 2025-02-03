@@ -904,16 +904,23 @@ document.addEventListener('keydown', (event) => {
            !event.target.closest('input, textarea, [contenteditable]') && 
            !searchModal.classList.contains('active')) {
         
-        event.preventDefault();
-        openSearchModal();
-        // Instead of directly setting the value, we should queue it
-        // for after the modal is open and focused
-        requestAnimationFrame(() => {
-            searchInput.value = event.key.toLowerCase();
-            searchInput.dispatchEvent(new Event('input')); // Trigger the search
-        });
-    }
-});
+            event.preventDefault();
+            const firstChar = event.key.toLowerCase(); // Store the first character
+            openSearchModal();
+            
+            // Use two animation frames to ensure proper sequencing
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    searchInput.value = firstChar; // Set the first character
+                    searchInput.dispatchEvent(new Event('input')); // Trigger search
+                    searchInput.focus(); // Ensure focus is maintained
+                });
+            });
+        }
+        else if (event.key === 'Escape') {
+            closeSearchModal();
+        }
+    });
 
 document.addEventListener('keyup', (event) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
