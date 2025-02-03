@@ -751,6 +751,7 @@ function handleCheckboxChange(checkbox) {
 
 // --- Check All Button Functions ---
 function startCheckingAnimation(checkAllBtn) {
+    const column = checkAllBtn.closest('.column');
     checkAllBtn.classList.add('checking');
     checkAllBtn.classList.remove('checked', 'unchecked', 'pop', 'reverse-pop');
     const progressCircle = checkAllBtn.querySelector('.progress-circle');
@@ -811,28 +812,10 @@ function cancelCheckingAnimation(checkAllBtn) {
     void progressCircle.offsetWidth;
     progressCircle.style.transition = '';
 
-    const column = checkAllBtn.closest('.column');
-    updateCheckboxesAndState(column, false); // Call common function to UNCHECK checkboxes
-    // localStorage.setItem(`checkAllState-${column.id}`, 'unchecked'); // Now handled in updateCheckboxesAndState
-}
-
-function handleCheckAllButtonClick(checkAllBtn) {
-    const column = checkAllBtn.closest('.column');
-    const checkboxes = column.checkboxCache;
-    const allChecked = checkboxes.every(cb => cb.checked);
-
-    if (allChecked) {
-        cancelCheckingAnimation(checkAllBtn); 
-        checkAllBtn.classList.remove('checked', 'pop');
-        checkAllBtn.classList.add('unchecked', 'reverse-pop');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = false;
-            saveCheckboxState(checkbox);
-        });
-        updateProgressBar();
-        localStorage.setItem(`checkAllState-${column.id}`, 'unchecked');
-    } else {
-        startCheckingAnimation(checkAllBtn);
+    // Don't update checkbox states if it was a hold attempt
+    if (!checkAllBtn.isHolding) {
+        const column = checkAllBtn.closest('.column');
+        updateCheckboxesAndState(column, false);
     }
 }
 
@@ -1254,23 +1237,37 @@ function handleCheckAllButtonClick(checkAllBtn) {
     const column = checkAllBtn.closest('.column');
     const checkboxes = column.checkboxCache;
     const allChecked = checkboxes.every(cb => cb.checked);
+    const anyChecked = checkboxes.some(cb => cb.checked);
 
-    if (allChecked) {
-        // Show confirmation modal before unchecking all
-        showConfirmationModal(
-            // onConfirm (Yes)
-            () => {
-                cancelCheckingAnimation(checkAllBtn);
-                checkAllBtn.classList.remove('checked', 'pop');
-                checkAllBtn.classList.add('unchecked', 'reverse-pop');
-                updateCheckboxesAndState(column, false);
-            },
-            // onCancel (No)
-            () => {
-                // Do nothing, keep checkmarks
-            }
-        );
+    // Only handle click behavior if it's not a hold
+    if (!checkAllBtn.isHolding) {
+        if (allChecked) {
+            showConfirmationModal(
+                () => {
+                    // Only make changes after user confirms
+                    checkAllBtn.classList.remove('checked', 'pop');
+                    checkAllBtn.classList.add('unchecked', 'reverse-pop');
+                    updateCheckboxesAndState(column, false);
+                },
+                () => {
+                    // Do nothing, keep checkmarks
+                }
+            );
+        } else if (anyChecked) {
+            showConfirmationModal(
+                () => {
+                    // Only make changes after user confirms
+                    updateCheckboxesAndState(column, false);
+                },
+                () => {
+                    // Do nothing, keep checkmarks
+                }
+            );
+        } else {
+            startCheckingAnimation(checkAllBtn);
+        }
     } else {
+        // For hold behavior, just animate
         startCheckingAnimation(checkAllBtn);
     }
 }
@@ -1356,11 +1353,90 @@ document.querySelectorAll('.cell input[type="checkbox"]').forEach(checkbox => {
 // Check All Button Event Listeners
 document.querySelectorAll('.column').forEach(column => {
     const checkAllBtn = column.querySelector('.check-all-btn');
-    let isMouseDown = false;
+    let mouseDownTime;
+    let mouseDownOnCheckedBtn = false;
+    let wasHoldCompleted = false;
     
-    checkAllBtn.addEventListener('mousedown', () => { isMouseDown = true; handleCheckAllButtonClick(checkAllBtn); });
-    checkAllBtn.addEventListener('mouseleave', () => { if (checkAllBtn.classList.contains('checking') && isMouseDown) cancelCheckingAnimation(checkAllBtn); });
-    window.addEventListener('mouseup', () => { if (checkAllBtn.classList.contains('checking')) cancelCheckingAnimation(checkAllBtn); isMouseDown = false; });
+    checkAllBtn.addEventListener('mousedown', () => {
+        const checkboxes = column.checkboxCache;
+        const allChecked = checkboxes.every(cb => cb.checked);
+        mouseDownTime = Date.now();
+        wasHoldCompleted = false;
+
+        if (allChecked) {
+            // Just record that mousedown started on a checked button
+            mouseDownOnCheckedBtn = true;
+            return; // Don't start any animation
+        }
+
+        // Start the animation regardless of whether it's a click or hold
+        checkAllBtn.isHolding = true;
+        startCheckingAnimation(checkAllBtn);
+    });
+
+    checkAllBtn.addEventListener('mouseleave', () => {
+        if (mouseDownOnCheckedBtn) {
+            mouseDownOnCheckedBtn = false;
+            return;
+        }
+
+        if (checkAllBtn.classList.contains('checking')) {
+            checkAllBtn.classList.remove('checking');
+            const progressCircle = checkAllBtn.querySelector('.progress-circle');
+            progressCircle.style.transition = 'none';
+            progressCircle.style.strokeDashoffset = CONFIG.ANIMATION.CIRCLE_CIRCUMFERENCE;
+            void progressCircle.offsetWidth;
+            progressCircle.style.transition = '';
+        }
+        checkAllBtn.isHolding = false;
+    });
+
+    checkAllBtn.addEventListener('mouseup', (e) => {
+        const timeDiff = Date.now() - mouseDownTime;
+        const checkboxes = column.checkboxCache;
+        const anyChecked = checkboxes.some(cb => cb.checked);
+
+        // For checked button behavior
+        if (mouseDownOnCheckedBtn) {
+            // Only show confirmation modal if mouse is still over the button
+            if (e.target.closest('.check-all-btn')) {
+                handleCheckAllButtonClick(checkAllBtn);
+            }
+            mouseDownOnCheckedBtn = false;
+            return;
+        }
+
+        // If hold animation completed, just finish normally without confirmation
+        if (wasHoldCompleted) {
+            wasHoldCompleted = false;
+            return;
+        }
+
+        // For unchecked button with some checked boxes - handle as click
+        if (!checkAllBtn.classList.contains('checked') && anyChecked && timeDiff < 200) {
+            checkAllBtn.isHolding = false;
+            handleCheckAllButtonClick(checkAllBtn);
+        } 
+        // For all other cases, just clean up the animation if needed
+        else if (checkAllBtn.classList.contains('checking')) {
+            checkAllBtn.classList.remove('checking');
+            const progressCircle = checkAllBtn.querySelector('.progress-circle');
+            progressCircle.style.transition = 'none';
+            progressCircle.style.strokeDashoffset = CONFIG.ANIMATION.CIRCLE_CIRCUMFERENCE;
+            void progressCircle.offsetWidth;
+            progressCircle.style.transition = '';
+        }
+        checkAllBtn.isHolding = false;
+    });
+
+    // Add this to track when hold animation completes
+    function completeCheckingAnimation(checkAllBtn) {
+        checkAllBtn.classList.remove('checking');
+        checkAllBtn.classList.add('checked', 'pop');
+        wasHoldCompleted = true;
+        const column = checkAllBtn.closest('.column');
+        updateCheckboxesAndState(column, true);
+    }
 });
 
 // Scroll Event Listener for Progress Indicator
