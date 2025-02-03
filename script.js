@@ -501,17 +501,14 @@ function highlightAndScrollToCell(link) {
 // --- Modal Functions ---
 function openSearchModal() {
     searchModal.classList.add('active');
-    requestAnimationFrame(() => {
-        searchInput.focus();
-        // Move cursor to end of input
-        const len = searchInput.value.length;
-        searchInput.setSelectionRange(len, len);
-    });
+    searchInput.focus();
     searchModal.setAttribute('aria-hidden', 'false');
     document.getElementById('main-content').setAttribute('aria-hidden', 'true');
+    
+    // Trap focus
     searchModal.addEventListener('keydown', trapTabKey);
 }
-  
+
   function trapTabKey(e) {
     if (e.key === 'Tab') {
       const focusable = searchModal.querySelectorAll('button, [href], input');
