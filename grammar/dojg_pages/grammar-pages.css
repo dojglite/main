@@ -27,7 +27,7 @@ body {
         #121212
     );
     color: var(--text-primary);
-    font-family: 'YuMincho', 'Hiragino Mincho ProN', 'MS PMincho', serif;
+    font-family: 'TsukuMinPr6N-R', 'Hiragino Mincho ProN', 'MS PMincho', serif;
     line-height: 1.6;
     margin: 0;
     min-height: 100vh;
