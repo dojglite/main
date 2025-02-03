@@ -501,13 +501,16 @@ function highlightAndScrollToCell(link) {
 // --- Modal Functions ---
 function openSearchModal() {
     searchModal.classList.add('active');
-    searchInput.focus();
+    requestAnimationFrame(() => {
+        searchInput.focus();
+        // Move cursor to end of input
+        const len = searchInput.value.length;
+        searchInput.setSelectionRange(len, len);
+    });
     searchModal.setAttribute('aria-hidden', 'false');
     document.getElementById('main-content').setAttribute('aria-hidden', 'true');
-    
-    // Trap focus
     searchModal.addEventListener('keydown', trapTabKey);
-  }
+}
   
   function trapTabKey(e) {
     if (e.key === 'Tab') {
@@ -903,11 +906,12 @@ document.addEventListener('keydown', (event) => {
         
         event.preventDefault();
         openSearchModal();
-        searchInput.value = event.key.toLowerCase();
-        debouncedSearch();
-    }
-    else if (event.key === 'Escape') {
-        closeSearchModal();
+        // Instead of directly setting the value, we should queue it
+        // for after the modal is open and focused
+        requestAnimationFrame(() => {
+            searchInput.value = event.key.toLowerCase();
+            searchInput.dispatchEvent(new Event('input')); // Trigger the search
+        });
     }
 });
 
