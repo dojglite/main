@@ -731,11 +731,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Help Modal handling
         if (helpModal.classList.contains('active')) {
-            const isInHelpModal = helpModal.contains(e.target);
-            if (isInHelpModal) {
-                e.preventDefault(); // Prevent background scroll
-            }
+        const helpContent = helpModal.querySelector('.help-content'); // Add this class to your scrollable content
+        const isInHelpContent = helpContent.contains(e.target) || e.target === helpContent;
+    
+        if (!isInHelpContent) {
+        e.preventDefault(); // Prevent background scroll only when not in content area
+    } else {
+        // Allow scrolling if we're at the boundaries
+        const atTop = helpContent.scrollTop === 0;
+        const atBottom = helpContent.scrollTop + helpContent.clientHeight >= helpContent.scrollHeight;
+        
+        if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
+            e.preventDefault();
         }
+    }
+}
     }, { passive: false });
 
 // Checkbox Event Listeners
@@ -864,6 +874,11 @@ document.addEventListener('mousemove', () => {
 });
 
 document.addEventListener('keydown', (event) => {
+    // Don't process search-related keyboard events if help modal is active
+    if (helpModal.classList.contains('active')) {
+        return;
+    }
+
     const results = searchResults.querySelectorAll('.search-result-item');
     const hasResults = results.length > 0;
 
@@ -878,7 +893,6 @@ document.addEventListener('keydown', (event) => {
                 
                 event.preventDefault();
                 if (selectedResultIndex === -1) {
-                    // If nothing is selected, select first item regardless of arrow direction
                     selectedResultIndex = 0;
                 } else {
                     if (event.key === 'ArrowDown') {
@@ -890,7 +904,7 @@ document.addEventListener('keydown', (event) => {
                 updateResultSelection(isArrowKeyHeld);
                 break;
 
-                case 'Enter':
+            case 'Enter':
                 if (selectedResultIndex > -1 && results[selectedResultIndex]) {
                     results[selectedResultIndex].querySelector('a').click();
                 }
@@ -910,13 +924,12 @@ document.addEventListener('keydown', (event) => {
         !searchModal.classList.contains('active')) {
      
          event.preventDefault();
-         const firstChar = event.key.toLowerCase();
-         openSearchModal(firstChar);  // Pass the character to openSearchModal
- }
-        else if (event.key === 'Escape') {
-            closeSearchModal();
-        }
-    });
+         openSearchModal(event.key.toLowerCase());
+    }
+    else if (event.key === 'Escape') {
+        closeSearchModal();
+    }
+});
 
 document.addEventListener('keyup', (event) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
