@@ -415,7 +415,6 @@ function performSearch() {
         noResults.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary');
         searchResults.appendChild(noResults);
     }
-    searchModal.classList.add('active');
 }
 
 function addSearchResultItem(link, index) {
@@ -500,6 +499,7 @@ function highlightAndScrollToCell(link) {
 
 // --- Modal Functions ---
 function openSearchModal() {
+    searchModal.classList.add('active');
     searchInput.focus();
     searchModal.setAttribute('aria-hidden', 'false');
     document.getElementById('main-content').setAttribute('aria-hidden', 'true');
