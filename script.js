@@ -906,19 +906,22 @@ document.addEventListener('keydown', (event) => {
         }
     }
 
+    if (event.ctrlKey && event.key === 'f') { 
+        event.preventDefault(); 
+        openSearchModal(); 
+    }
     else if (event.key.length === 1 && 
-        !event.ctrlKey && 
-        !event.metaKey && 
-        !event.altKey && 
-        !event.target.closest('input, textarea, [contenteditable]') && 
-        !searchModal.classList.contains('active')) {
-     
-     event.preventDefault();
-     openSearchModal();
-     searchInput.value = event.key.toLowerCase();
-     searchInput.focus();
-     performSearch(); // Immediately perform search instead of debouncing
- }
+           !event.ctrlKey && 
+           !event.metaKey && 
+           !event.altKey && 
+           !event.target.closest('input, textarea, [contenteditable]') && 
+           !searchModal.classList.contains('active')) {
+        
+        event.preventDefault();
+        openSearchModal();
+        searchInput.value = event.key.toLowerCase();
+        debouncedSearch();
+    }
     else if (event.key === 'Escape') {
         closeSearchModal();
     }
