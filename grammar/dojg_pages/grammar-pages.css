@@ -442,3 +442,30 @@ html {
         transform: scale(1) translateY(0);
     }
 }
+
+/* Style for links within paragraphs */
+p > a {
+    background: linear-gradient(135deg, #c0abff 20%, #9f7eff 30%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 500;
+    text-shadow: 
+        0 0 8px rgba(124, 77, 255, 0.5),
+        0 0 4px rgba(145, 123, 204, 0.15),
+        0 1px 1px rgba(253, 253, 253, 0.4);
+    position: relative;
+    display: inline-block;
+    padding: 0 0px;
+    margin: 0 1px;
+    text-decoration-color: rgba(159, 126, 255, 0.5); /* Makes the underline semi-transparent purple */
+    transition: all 0.3s ease;
+}
+
+p > a:hover {
+    text-shadow: 
+        0 0 12px rgba(124, 77, 255, 0.7),
+        0 0 4px rgba(124, 77, 255, 0.5),
+        0 2px 2px rgba(0, 0, 0, 0.3);
+    text-decoration-color: rgba(192, 171, 255, 0.7); /* Brighter underline on hover */
+}
