@@ -500,31 +500,23 @@ function highlightAndScrollToCell(link) {
 
 // --- Modal Functions ---
 function openSearchModal(initialValue = '') {
-    console.log('Starting openSearchModal function');
-    console.log('searchModal exists:', !!searchModal);
-    console.log('searchInput exists:', !!searchInput);
-    console.log('Initial value:', initialValue);  // Add this
     
     searchModal.classList.add('active');
     
     if (initialValue) {
-        console.log('Setting value to:', initialValue);  // Add this
         searchInput.value = initialValue;
-        console.log('Value after setting:', searchInput.value);  // Add this
         searchInput.dispatchEvent(new Event('input'));
-        console.log('Event dispatched');  // Add this
     }
     
     searchInput.focus();
     searchModal.setAttribute('aria-hidden', 'false');
     document.getElementById('main-content').setAttribute('aria-hidden', 'true');
-    
     searchModal.addEventListener('keydown', trapTabKey);
 }
 
   function trapTabKey(e) {
     if (e.key === 'Tab') {
-      const focusable = searchModal.querySelectorAll('button, [href], input');
+      const focusable = searchModal.querySelectorAll('button, [href], input, .search-result-item a');
       if (focusable.length === 0) return;
       
       const first = focusable[0];
@@ -915,7 +907,6 @@ document.addEventListener('keydown', (event) => {
      
          event.preventDefault();
          const firstChar = event.key.toLowerCase();
-         console.log('First char:', firstChar);
          openSearchModal(firstChar);  // Pass the character to openSearchModal
  }
         else if (event.key === 'Escape') {
@@ -972,7 +963,6 @@ helpModal.addEventListener('contextmenu', (e) => {
     });
 
 searchInput.addEventListener('input', function() {
-        console.log('Input event fired. Current value:', this.value);  // Add this
         selectedResultIndex = -1;
         debouncedSearch();
     });
