@@ -702,7 +702,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, { threshold: 0, rootMargin: '50px' });
     document.querySelectorAll('[data-scroll]').forEach(element => observer.observe(element));
-});
 
 // Add wheel event handler for modal scrolling
 document.addEventListener('wheel', (e) => {
@@ -967,4 +966,5 @@ helpModal.addEventListener('click', (e) => {
 // Prevent context menu on modal
 helpModal.addEventListener('contextmenu', (e) => {
     e.preventDefault();
+});
 });
