@@ -669,6 +669,7 @@ function handleCheckAllButtonClick(checkAllBtn) {
 
 function showHelpModal() {
     helpModal.classList.add('active');
+    helpModal.focus(); 
 }
 
 // Function to hide help modal
@@ -731,7 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Help Modal handling
         if (helpModal.classList.contains('active')) {
             const isInHelpModal = helpModal.contains(e.target);
-            if (!isInHelpModal) {
+            if (isInHelpModal) {
                 e.preventDefault(); // Prevent background scroll
             }
         }
