@@ -906,21 +906,14 @@ document.addEventListener('keydown', (event) => {
          event.preventDefault();
          const firstChar = event.key.toLowerCase();
          console.log('First char:', firstChar);
-         console.log('About to call openSearchModal');  // Add this
          openSearchModal();
-         console.log('Called openSearchModal');  // Add this
- 
-         setTimeout(() => {
-             console.log('Inside setTimeout');  // Add this
-             console.log('Modal is active:', searchModal.classList.contains('active'));
-             console.log('Search input exists:', !!searchInput);
-             console.log('Current search input value:', searchInput.value);
-             
-             searchInput.value = firstChar;
-             console.log('After setting value:', searchInput.value);
-             searchInput.dispatchEvent(new Event('input'));
-             searchInput.focus();
-         }, 100);
+         
+         // Directly set the value after opening modal
+         console.log('Setting value directly');
+         searchInput.value = firstChar;
+         console.log('Value set to:', searchInput.value);
+         searchInput.dispatchEvent(new Event('input'));
+         searchInput.focus();
  }
         else if (event.key === 'Escape') {
             closeSearchModal();
