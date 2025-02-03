@@ -856,26 +856,10 @@ document.addEventListener('mousemove', () => {
 });
 
 document.addEventListener('keydown', (event) => {
-    const hasResults = searchResults.children.length > 0;
-    const isFocusedOnInput = document.activeElement === searchInput;
-    const isModifierPressed = event.ctrlKey || event.metaKey || event.altKey;
+    const results = searchResults.querySelectorAll('.search-result-item');
+    const hasResults = results.length > 0;
 
-    // Handle search modal activation
-    if (event.key === '/' && !isModifierPressed && !isFocusedOnInput) {
-        event.preventDefault();
-        openSearchModal();
-        searchInput.value = ''; // Clear previous input
-    }
-    
-    // Handle character input after modal is open
-    if (searchModal.classList.contains('active') && !isModifierPressed) {
-        // Allow normal typing in search input
-        if (event.key.length === 1 && !event.altKey && !event.ctrlKey) {
-            searchInput.focus();
-            return; // Let the default input handling occur
-        }
-    }
-    if (searchModal.classList.contains('active') && hasResults) {
+    if (searchModal.classList.contains('active')) {
         switch(event.key) {
             case 'ArrowDown':
             case 'ArrowUp':
