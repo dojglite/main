@@ -864,7 +864,7 @@ document.addEventListener('keydown', (event) => {
     if (event.key === '/' && !isModifierPressed && !isFocusedOnInput) {
         event.preventDefault();
         openSearchModal();
-        searchInput.value = ''; // Clears previous input
+        searchInput.value = ''; // Clear previous input
         return;
     }
 
@@ -905,6 +905,27 @@ document.addEventListener('keydown', (event) => {
                 break;
         }
     }
+
+    // Handle character input (both for opening modal and typing in search)
+    if (event.key.length === 1 && 
+        !isModifierPressed && 
+        !isFocusedOnInput &&
+        !event.target.closest('input, textarea, [contenteditable]')) {
+        
+        event.preventDefault();
+        const char = event.key.toLowerCase();
+        
+        if (!searchModal.classList.contains('active')) {
+            openSearchModal();
+            searchInput.value = char;  // Set the initial character
+        } else {
+            searchInput.value += char; // Append character if modal is already open
+        }
+        
+        searchInput.focus();
+        debouncedSearch();
+    }
+});
 
     // Handle character input (both for opening modal and typing in search)
     if (event.key.length === 1 && 
