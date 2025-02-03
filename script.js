@@ -909,21 +909,26 @@ document.addEventListener('keydown', (event) => {
     // Handle character input (both for opening modal and typing in search)
     if (event.key.length === 1 && 
         !isModifierPressed && 
-        !isFocusedOnInput &&
         !event.target.closest('input, textarea, [contenteditable]')) {
         
         event.preventDefault();
-        const char = event.key.toLowerCase();
         
         if (!searchModal.classList.contains('active')) {
+            // Store the character first
+            const firstChar = event.key.toLowerCase();
+            // Then open modal
             openSearchModal();
-            searchInput.value = char;  // Set the initial character
-        } else {
-            searchInput.value += char; // Append character if modal is already open
+            // Set the value and focus after modal is open
+            requestAnimationFrame(() => {
+                searchInput.value = firstChar;
+                searchInput.focus();
+                debouncedSearch();
+            });
+        } else if (!isFocusedOnInput) {
+            searchInput.focus();
+            searchInput.value += event.key.toLowerCase();
+            debouncedSearch();
         }
-        
-        searchInput.focus();
-        debouncedSearch();
     }
 });
 
