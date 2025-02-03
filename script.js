@@ -499,13 +499,19 @@ function highlightAndScrollToCell(link) {
 
 
 // --- Modal Functions ---
-function openSearchModal() {
-    console.log('Starting openSearchModal function');  // Add this
-    console.log('searchModal exists:', !!searchModal);  // Add this
-    console.log('searchInput exists:', !!searchInput);  // Add this
+function openSearchModal(initialValue = '') {  // Add parameter with default empty string
+    console.log('Starting openSearchModal function');
+    console.log('searchModal exists:', !!searchModal);
+    console.log('searchInput exists:', !!searchInput);
     
     searchModal.classList.add('active');
     searchInput.focus();
+    
+    if (initialValue) {  // If we have an initial value
+        searchInput.value = initialValue;
+        searchInput.dispatchEvent(new Event('input'));
+    }
+    
     searchModal.setAttribute('aria-hidden', 'false');
     document.getElementById('main-content').setAttribute('aria-hidden', 'true');
     
@@ -906,14 +912,7 @@ document.addEventListener('keydown', (event) => {
          event.preventDefault();
          const firstChar = event.key.toLowerCase();
          console.log('First char:', firstChar);
-         openSearchModal();
-         
-         // Directly set the value after opening modal
-         console.log('Setting value directly');
-         searchInput.value = firstChar;
-         console.log('Value set to:', searchInput.value);
-         searchInput.dispatchEvent(new Event('input'));
-         searchInput.focus();
+         openSearchModal(firstChar);  // Pass the character to openSearchModal
  }
         else if (event.key === 'Escape') {
             closeSearchModal();
