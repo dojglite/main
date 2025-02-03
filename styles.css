@@ -1586,6 +1586,8 @@
     padding: 1.5rem;
     overflow-y: auto;
     flex: 1;
+    max-height: 70vh;
+    overflow-y: auto;
 }
 
 .help-section {
