@@ -894,27 +894,29 @@ document.addEventListener('keydown', (event) => {
         openSearchModal(); 
     }
     else if (event.key.length === 1 && 
-           !event.ctrlKey && 
-           !event.metaKey && 
-           !event.altKey && 
-           !event.target.closest('input, textarea, [contenteditable]') && 
-           !searchModal.classList.contains('active')) {
-        
-            event.preventDefault();
-            const firstChar = event.key.toLowerCase(); // Store the first character
-            console.log('First char:', firstChar); 
-            openSearchModal();
-            
-            // Use two animation frames to ensure proper sequencing
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    console.log('Setting value to:', firstChar); // Add this debug line
-                    searchInput.value = firstChar; // Set the first character
-                    searchInput.dispatchEvent(new Event('input')); // Trigger search
-                    searchInput.focus(); // Ensure focus is maintained
-                });
-            });
-        }
+        !event.ctrlKey && 
+        !event.metaKey && 
+        !event.altKey && 
+        !event.target.closest('input, textarea, [contenteditable]') && 
+        !searchModal.classList.contains('active')) {
+     
+         event.preventDefault();
+         const firstChar = event.key.toLowerCase();
+         console.log('First char:', firstChar);
+         openSearchModal();
+         
+         // Replace the requestAnimationFrame with this setTimeout
+         setTimeout(() => {
+             console.log('Modal is active:', searchModal.classList.contains('active'));
+             console.log('Search input exists:', !!searchInput);
+             console.log('Current search input value:', searchInput.value);
+             
+             searchInput.value = firstChar;
+             console.log('After setting value:', searchInput.value);
+             searchInput.dispatchEvent(new Event('input'));
+             searchInput.focus();
+         }, 100);
+ }
         else if (event.key === 'Escape') {
             closeSearchModal();
         }
