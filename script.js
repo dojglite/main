@@ -730,9 +730,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Help Modal handling
         if (helpModal.classList.contains('active')) {
-            // Prevent any scrolling when help modal is active if not clicking inside modal
-            if (!helpModal.contains(e.target)) {
-                e.preventDefault();
+            const isInHelpModal = helpModal.contains(e.target);
+            if (!isInHelpModal) {
+                e.preventDefault(); // Prevent background scroll
             }
         }
     }, { passive: false });
@@ -943,16 +943,22 @@ document.addEventListener('contextmenu', (event) => {
     }
 });
 
+// Keydown handler to block keyboard input when help modal is open
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'F1' || e.key === 'Help') {
-        e.preventDefault(); // Prevent default F1 behavior
-        if (helpModal.classList.contains('active')) {
+    if (helpModal.classList.contains('active')) {
+        // Only allow Escape and F1 when help modal is open
+        if (e.key === 'Escape' || e.key === 'F1' || e.key === 'Help') {
+            e.preventDefault();
             hideHelpModal();
-        } else {
-            showHelpModal();
         }
-    } else if (e.key === 'Escape' && helpModal.classList.contains('active')) {
-        hideHelpModal();
+        e.preventDefault(); // Block all other keyboard input
+        return;
+    }
+
+    // F1 handler
+    if (e.key === 'F1' || e.key === 'Help') {
+        e.preventDefault();
+        showHelpModal();
     }
 });
 
