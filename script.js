@@ -903,11 +903,13 @@ document.addEventListener('keydown', (event) => {
         
             event.preventDefault();
             const firstChar = event.key.toLowerCase(); // Store the first character
+            console.log('First char:', firstChar); 
             openSearchModal();
             
             // Use two animation frames to ensure proper sequencing
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
+                    console.log('Setting value to:', firstChar); // Add this debug line
                     searchInput.value = firstChar; // Set the first character
                     searchInput.dispatchEvent(new Event('input')); // Trigger search
                     searchInput.focus(); // Ensure focus is maintained
