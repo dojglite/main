@@ -500,8 +500,11 @@ function highlightAndScrollToCell(link) {
 
 // --- Modal Functions ---
 function openSearchModal() {
+    console.log('Opening modal');
     searchModal.classList.add('active');
+    console.log('Modal active:', searchModal.classList.contains('active'));
     searchInput.focus();
+    console.log('Search input focused');
     searchModal.setAttribute('aria-hidden', 'false');
     document.getElementById('main-content').setAttribute('aria-hidden', 'true');
     
