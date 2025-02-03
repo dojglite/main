@@ -703,8 +703,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0, rootMargin: '50px' });
     document.querySelectorAll('[data-scroll]').forEach(element => observer.observe(element));
 
-// Add wheel event handler for modal scrolling
-document.addEventListener('wheel', (e) => {
+    // Add wheel event handler for modal scrolling
+    document.addEventListener('wheel', (e) => {
     if (searchModal.classList.contains('active')) {
         const scrollContainer = searchResults; // Use the correctly cached searchResults
 
@@ -737,7 +737,7 @@ document.querySelectorAll('.cell input[type="checkbox"]').forEach(checkbox => {
         handleShiftClickSelection(event, checkbox, lastCheckedCheckbox);
         lastCheckedCheckbox = checkbox; // Update lastChecked always
     });
-});
+}); 
 
 // Check All Button Event Listeners
 document.querySelectorAll('.column').forEach(column => {
@@ -966,5 +966,5 @@ helpModal.addEventListener('click', (e) => {
 // Prevent context menu on modal
 helpModal.addEventListener('contextmenu', (e) => {
     e.preventDefault();
-});
+    });
 });
