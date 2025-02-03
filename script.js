@@ -710,34 +710,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add wheel event handler for modal scrolling
     document.addEventListener('wheel', (e) => {
-     // Search Modal handling
-     if (searchModal.classList.contains('active')) {
-        const scrollContainer = searchResults;
-        const isInScrollArea = scrollContainer.contains(e.target) ||
-                              e.target === scrollContainer;
-        const hasScrollSpace = scrollContainer.scrollHeight > scrollContainer.clientHeight;
-        const atTop = scrollContainer.scrollTop === 0;
-        const atBottom = scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight;
-
-        if (isInScrollArea && hasScrollSpace) {
-            if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
+        // Search Modal handling
+        if (searchModal.classList.contains('active')) {
+            const scrollContainer = searchResults;
+            const isInScrollArea = scrollContainer.contains(e.target) ||
+                                  e.target === scrollContainer;
+            const hasScrollSpace = scrollContainer.scrollHeight > scrollContainer.clientHeight;
+            const atTop = scrollContainer.scrollTop === 0;
+            const atBottom = scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight;
+    
+            if (isInScrollArea && hasScrollSpace) {
+                if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
+                    e.preventDefault();
+                }
+            } else if (searchModal.contains(e.target)) {
                 e.preventDefault();
             }
-        } else if (searchModal.contains(e.target)) {
-            e.preventDefault();
         }
-    }
-
-    // Help Modal handling
-    if (helpModal.classList.contains('active')) {
-        const helpContent = helpModal.querySelector('.help-content');
-        const isInHelpArea = helpContent && (helpContent.contains(e.target) || e.target === helpContent);
-        
-        if (!isInHelpArea) {
-            e.preventDefault(); // Prevent background scroll when not in help content
+    
+        // Help Modal handling
+        if (helpModal.classList.contains('active')) {
+            // Prevent any scrolling when help modal is active if not clicking inside modal
+            if (!helpModal.contains(e.target)) {
+                e.preventDefault();
+            }
         }
-    }
-}, { passive: false });
+    }, { passive: false });
 
 // Checkbox Event Listeners
 let lastCheckedCheckbox;
@@ -953,6 +951,8 @@ document.addEventListener('keydown', (e) => {
         } else {
             showHelpModal();
         }
+    } else if (e.key === 'Escape' && helpModal.classList.contains('active')) {
+        hideHelpModal();
     }
 });
 
