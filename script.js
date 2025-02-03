@@ -500,15 +500,15 @@ function highlightAndScrollToCell(link) {
 
 // --- Modal Functions ---
 function openSearchModal() {
-    console.log('Opening modal');
+    console.log('Starting openSearchModal function');  // Add this
+    console.log('searchModal exists:', !!searchModal);  // Add this
+    console.log('searchInput exists:', !!searchInput);  // Add this
+    
     searchModal.classList.add('active');
-    console.log('Modal active:', searchModal.classList.contains('active'));
     searchInput.focus();
-    console.log('Search input focused');
     searchModal.setAttribute('aria-hidden', 'false');
     document.getElementById('main-content').setAttribute('aria-hidden', 'true');
     
-    // Trap focus
     searchModal.addEventListener('keydown', trapTabKey);
 }
 
@@ -906,10 +906,12 @@ document.addEventListener('keydown', (event) => {
          event.preventDefault();
          const firstChar = event.key.toLowerCase();
          console.log('First char:', firstChar);
+         console.log('About to call openSearchModal');  // Add this
          openSearchModal();
-         
-         // Replace the requestAnimationFrame with this setTimeout
+         console.log('Called openSearchModal');  // Add this
+ 
          setTimeout(() => {
+             console.log('Inside setTimeout');  // Add this
              console.log('Modal is active:', searchModal.classList.contains('active'));
              console.log('Search input exists:', !!searchInput);
              console.log('Current search input value:', searchInput.value);
