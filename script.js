@@ -906,22 +906,22 @@ document.addEventListener('keydown', (event) => {
         }
     }
 
-    if (event.ctrlKey && event.key === 'f') { 
-        event.preventDefault(); 
-        openSearchModal(); 
-    }
     else if (event.key.length === 1 && 
-           !event.ctrlKey && 
-           !event.metaKey && 
-           !event.altKey && 
-           !event.target.closest('input, textarea, [contenteditable]') && 
-           !searchModal.classList.contains('active')) {
-        
-        event.preventDefault();
-        openSearchModal();
-        searchInput.value = event.key.toLowerCase();
-        debouncedSearch();
-    }
+        !event.ctrlKey && 
+        !event.metaKey && 
+        !event.altKey && 
+        !event.target.closest('input, textarea, [contenteditable]') && 
+        !searchModal.classList.contains('active')) {
+     
+     event.preventDefault();
+     openSearchModal();
+     searchInput.value = event.key.toLowerCase();
+     searchInput.focus();
+     performSearch(); // Immediately perform first search
+     
+     // Create a new input event to trigger the debounced listener for subsequent typing
+     searchInput.dispatchEvent(new Event('input'));
+ }
     else if (event.key === 'Escape') {
         closeSearchModal();
     }
