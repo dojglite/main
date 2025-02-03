@@ -483,7 +483,7 @@
         .progress-percentage {
             position: absolute;
             right: 0; /* Adjust position for slightly wider percentage */
-            top: 50%;
+            top: 39%;
             transform: translateY(-50%);
             color: var(--text-primary-rgba); /* Use text-primary-rgba for slightly less intense white */
             font-weight: 700; /* Slightly bolder font-weight */
@@ -1623,13 +1623,15 @@
     font-size: 1.2rem;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&display=swap');
+
 .shortcut-key {
     background: rgba(124, 77, 255, 0.1);
     color: var(--primary);
     padding: 0.25rem 0.75rem;
     border-radius: 6px;
     font-size: 1.2rem;
-    font-family: monospace;
+    font-family: 'BIZ UDGothic', monospace;
 }
 
 .feature-detail {
