@@ -52,23 +52,23 @@ fetch('./romaji-to-japanese-map.json')
 
 // Reset overlay animations
 function resetPageState() {
-    // Remove any leftover transition elements
+    // Remove transition elements
     const existingContainer = document.querySelector('.transition-container');
     const existingOverlay = document.querySelector('.transition-overlay');
     
     if (existingContainer) existingContainer.remove();
     if (existingOverlay) existingOverlay.remove();
 
-    // Aggressively reset column states
+    // Reset column states
     document.querySelectorAll('.column').forEach(column => {
         // Store original data
         const id = column.id;
         const category = column.getAttribute('data-category');
         const originalContent = column.innerHTML;
         
-        // Create a fresh column
+        // Create fresh column
         const freshColumn = document.createElement('div');
-        freshColumn.className = 'column';  // Only set base class
+        freshColumn.className = 'column';
         freshColumn.id = id;
         if (category) freshColumn.setAttribute('data-category', category);
         freshColumn.innerHTML = originalContent;
@@ -76,20 +76,112 @@ function resetPageState() {
         // Replace old column with fresh one
         column.parentNode.replaceChild(freshColumn, column);
         
-        // Re-initialize any necessary event listeners or caches for the new column
+        // Initialize checkbox cache
         const checkboxesInColumn = freshColumn.querySelectorAll('input[type="checkbox"]');
         freshColumn.checkboxCache = Array.from(checkboxesInColumn);
+        
+        // Reinitialize check-all button
+        const checkAllBtn = freshColumn.querySelector('.check-all-btn');
+        if (checkAllBtn) {
+            let mouseDownTime;
+            let mouseDownOnCheckedBtn = false;
+            let wasHoldCompleted = false;
+
+            // Reset initial state
+            checkAllBtn.classList.remove('checking', 'checked', 'pop', 'reverse-pop');
+            const progressCircle = checkAllBtn.querySelector('.progress-circle');
+            if (progressCircle) {
+                progressCircle.style.strokeDashoffset = CONFIG.ANIMATION.CIRCLE_CIRCUMFERENCE;
+            }
+
+            // Reattach event listeners
+            checkAllBtn.addEventListener('mousedown', () => {
+                const allChecked = freshColumn.checkboxCache.every(cb => cb.checked);
+                mouseDownTime = Date.now();
+                wasHoldCompleted = false;
+
+                if (allChecked) {
+                    mouseDownOnCheckedBtn = true;
+                    return;
+                }
+
+                checkAllBtn.isHolding = true;
+                startCheckingAnimation(checkAllBtn);
+            });
+
+            checkAllBtn.addEventListener('mouseleave', () => {
+                if (mouseDownOnCheckedBtn) {
+                    mouseDownOnCheckedBtn = false;
+                    return;
+                }
+
+                if (checkAllBtn.classList.contains('checking')) {
+                    cancelCheckingAnimation(checkAllBtn);
+                }
+                checkAllBtn.isHolding = false;
+            });
+
+            checkAllBtn.addEventListener('mouseup', (e) => {
+                const timeDiff = Date.now() - mouseDownTime;
+                const anyChecked = freshColumn.checkboxCache.some(cb => cb.checked);
+
+                if (mouseDownOnCheckedBtn) {
+                    if (e.target.closest('.check-all-btn')) {
+                        handleCheckAllButtonClick(checkAllBtn);
+                    }
+                    mouseDownOnCheckedBtn = false;
+                    return;
+                }
+
+                if (wasHoldCompleted) {
+                    wasHoldCompleted = false;
+                    return;
+                }
+
+                if (!checkAllBtn.classList.contains('checked') && anyChecked && timeDiff < 200) {
+                    checkAllBtn.isHolding = false;
+                    handleCheckAllButtonClick(checkAllBtn);
+                }
+                else if (checkAllBtn.classList.contains('checking')) {
+                    cancelCheckingAnimation(checkAllBtn);
+                }
+                checkAllBtn.isHolding = false;
+            });
+        }
+
+        // Reapply bookmarks
+        freshColumn.querySelectorAll('.cell label').forEach(label => {
+            if (label.closest('.cell').hasAttribute('data-scroll')) {
+                label.closest('.cell').setAttribute('data-scroll', '');
+            }
+            
+            const checkbox = label.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                const isBookmarked = localStorage.getItem(`bookmark-${checkbox.id}`) === 'true';
+                if (isBookmarked) {
+                    label.setAttribute('data-bookmarked', '');
+                } else {
+                    label.removeAttribute('data-bookmarked');
+                }
+            }
+            
+            label.addEventListener('contextmenu', handleBookmarkContextMenu);
+        });
+
         updateCheckAllButtonState(freshColumn);
     });
 
-    // Rest of your existing resetPageState code...
+    // Reset and reapply scroll animations
     document.querySelectorAll('[data-scroll]').forEach(element => {
+        // Remove the visibility class but keep the data-scroll attribute
         element.classList.remove('is-visible');
         element.style.opacity = '';
         element.style.transform = '';
+        // Force a reflow
         void element.offsetHeight;
     });
 
+    // Re-initialize the intersection observer for scroll animations
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -99,6 +191,7 @@ function resetPageState() {
         });
     }, { threshold: 0, rootMargin: '50px' });
 
+    // Re-observe all scroll elements
     document.querySelectorAll('[data-scroll]').forEach(element => {
         observer.observe(element);
     });
@@ -111,7 +204,7 @@ function resetPageState() {
         pageTransitionContainer.style.opacity = '';
     }
 
-    // Ensure container is visible
+    // Ensure container is visible and properly styled
     const container = document.querySelector('.container');
     if (container) {
         container.style.opacity = '';
@@ -122,22 +215,23 @@ function resetPageState() {
         container.style.display = 'grid';
     }
 
-    // Force a reflow
+    // Force a reflow of the entire page
     void document.documentElement.offsetHeight;
 }
+
 
 function handlePageLoad(event) {
     // Always clean up if we're coming from a navigation
     if (event.persisted || performance.getEntriesByType("navigation")[0].type === 'back_forward') {
         resetPageState();
         
-        // Double-check columns after a small delay
+        // Double-check cleanup
         setTimeout(() => {
             document.querySelectorAll('.column').forEach(column => {
                 if (column.classList.contains('exit-left') || 
                     column.classList.contains('exit-middle') || 
                     column.classList.contains('exit-right')) {
-                    resetPageState(); // Run cleanup again if needed
+                    resetPageState();
                 }
             });
         }, 50);
