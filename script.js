@@ -22,7 +22,7 @@ const CONFIG = {
     ANIMATION: {
         DURATION: 200,
         HIGHLIGHT_TIMEOUT: 7000,
-        PROGRESS_STEP: 0.006,
+        PROGRESS_STEP: 0.005,
         CIRCLE_CIRCUMFERENCE: 62.83
     },
     SEARCH: {
