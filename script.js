@@ -56,35 +56,40 @@ function resetPageState() {
     const existingContainer = document.querySelector('.transition-container');
     const existingOverlay = document.querySelector('.transition-overlay');
     
-    if (existingContainer) {
-        existingContainer.remove();
-    }
-    if (existingOverlay) {
-        existingOverlay.remove();
-    }
+    if (existingContainer) existingContainer.remove();
+    if (existingOverlay) existingOverlay.remove();
 
-    // Reset any animated columns
+    // Aggressively reset column states
     document.querySelectorAll('.column').forEach(column => {
-        // Remove animation classes
-        column.classList.remove('exit-left', 'exit-middle', 'exit-right');
-        // Reset styles
-        column.style.opacity = '';
-        column.style.transform = '';
-        column.style.animation = '';
+        // Store original data
+        const id = column.id;
+        const category = column.getAttribute('data-category');
+        const originalContent = column.innerHTML;
+        
+        // Create a fresh column
+        const freshColumn = document.createElement('div');
+        freshColumn.className = 'column';  // Only set base class
+        freshColumn.id = id;
+        if (category) freshColumn.setAttribute('data-category', category);
+        freshColumn.innerHTML = originalContent;
+        
+        // Replace old column with fresh one
+        column.parentNode.replaceChild(freshColumn, column);
+        
+        // Re-initialize any necessary event listeners or caches for the new column
+        const checkboxesInColumn = freshColumn.querySelectorAll('input[type="checkbox"]');
+        freshColumn.checkboxCache = Array.from(checkboxesInColumn);
+        updateCheckAllButtonState(freshColumn);
     });
 
-    // Reset all scroll-reveal elements
+    // Rest of your existing resetPageState code...
     document.querySelectorAll('[data-scroll]').forEach(element => {
-        // Remove the visibility class
         element.classList.remove('is-visible');
-        // Reset any transform/opacity styles
         element.style.opacity = '';
         element.style.transform = '';
-        // Force a reflow
         void element.offsetHeight;
     });
 
-    // Re-initialize the intersection observer for scroll animations
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -94,12 +99,10 @@ function resetPageState() {
         });
     }, { threshold: 0, rootMargin: '50px' });
 
-    // Re-observe all scroll elements
     document.querySelectorAll('[data-scroll]').forEach(element => {
         observer.observe(element);
     });
 
-    // Reset the page-transition-container if it exists
     const pageTransitionContainer = document.querySelector('.page-transition-container');
     if (pageTransitionContainer) {
         pageTransitionContainer.classList.remove('transitioning');
@@ -108,16 +111,18 @@ function resetPageState() {
         pageTransitionContainer.style.opacity = '';
     }
 
-    // Ensure the container is visible and properly styled
+    // Ensure container is visible
     const container = document.querySelector('.container');
     if (container) {
         container.style.opacity = '';
         container.style.transform = '';
         container.style.visibility = 'visible';
         container.style.display = '';
+        // Force grid layout refresh
+        container.style.display = 'grid';
     }
 
-    // Force a reflow of the entire page
+    // Force a reflow
     void document.documentElement.offsetHeight;
 }
 
@@ -125,9 +130,19 @@ function handlePageLoad(event) {
     // Always clean up if we're coming from a navigation
     if (event.persisted || performance.getEntriesByType("navigation")[0].type === 'back_forward') {
         resetPageState();
+        
+        // Double-check columns after a small delay
+        setTimeout(() => {
+            document.querySelectorAll('.column').forEach(column => {
+                if (column.classList.contains('exit-left') || 
+                    column.classList.contains('exit-middle') || 
+                    column.classList.contains('exit-right')) {
+                    resetPageState(); // Run cleanup again if needed
+                }
+            });
+        }, 50);
     }
     
-    // Clear the navigation state
     sessionStorage.removeItem('isNavigating');
 }
 
