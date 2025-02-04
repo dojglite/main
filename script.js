@@ -20,9 +20,8 @@ let mouseTimeout;
 let romajiToJapaneseMap = {};
 const CONFIG = {
     ANIMATION: {
-        DURATION: 200,
+        DURATION: 900,
         HIGHLIGHT_TIMEOUT: 7000,
-        PROGRESS_STEP: 0.006,
         CIRCLE_CIRCUMFERENCE: 62.83
     },
     SEARCH: {
@@ -146,20 +145,31 @@ function startCheckingAnimation(checkAllBtn) {
     const progressCircle = checkAllBtn.querySelector('.progress-circle');
     progressCircle.style.transition = 'none';
     progressCircle.style.strokeDashoffset = CONFIG.ANIMATION.CIRCLE_CIRCUMFERENCE;
-    void progressCircle.offsetWidth; // Force reflow
+    void progressCircle.offsetWidth;
     progressCircle.style.transition = 'stroke-dashoffset 0.04s linear';
-    animateCheckAllProgress(checkAllBtn, 0);
+
+    checkAllBtn.animationStartTime = performance.now();
+    checkAllBtn.progressPerMs = 1 / CONFIG.ANIMATION.DURATION; // Calculate progress per millisecond
+    animateCheckAllProgress(checkAllBtn);
 }
 
-function animateCheckAllProgress(checkAllBtn, progress) {
+function animateCheckAllProgress(checkAllBtn) {
     if (!checkAllBtn.classList.contains('checking')) return;
+
+    const elapsedTime = performance.now() - checkAllBtn.animationStartTime;
+    let progress = elapsedTime * checkAllBtn.progressPerMs; // Calculate progress based on elapsed time and progressPerMs
+
+    if (progress > 1) {
+        progress = 1;
+    }
+
     const progressCircle = checkAllBtn.querySelector('.progress-circle');
     const initialOffset = CONFIG.ANIMATION.CIRCLE_CIRCUMFERENCE;
     const newOffset = initialOffset * (1 - progress);
     progressCircle.style.strokeDashoffset = newOffset;
 
     if (progress < 1) {
-        requestAnimationFrame(() => animateCheckAllProgress(checkAllBtn, progress + CONFIG.ANIMATION.PROGRESS_STEP)); 
+        requestAnimationFrame(() => animateCheckAllProgress(checkAllBtn));
     } else {
         completeCheckingAnimation(checkAllBtn);
     }
@@ -247,7 +257,7 @@ function navigateWithTransition(event) {
                 // Wait for overlay fade to complete before navigation
                 setTimeout(() => {
                     window.location.href = targetUrl;
-                }, 50); 
+                }, 30); 
             });
         }
     };
