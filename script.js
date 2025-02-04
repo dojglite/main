@@ -60,110 +60,108 @@ function resetPageState() {
     if (existingOverlay) existingOverlay.remove();
 
     // Reset column states
-    document.querySelectorAll('.column').forEach(column => {
-        // Store original data
-        const id = column.id;
-        const category = column.getAttribute('data-category');
-        const originalContent = column.innerHTML;
+document.querySelectorAll('.column').forEach(column => {
+    // Instead of recreating the column, let's work with the existing one
+    const checkboxesInColumn = column.querySelectorAll('input[type="checkbox"]');
+    column.checkboxCache = Array.from(checkboxesInColumn);
+    
+    // Restore checkbox states directly
+    column.checkboxCache.forEach(checkbox => {
+        const savedState = localStorage.getItem(checkbox.id);
+        checkbox.checked = savedState === 'true';
         
-        // Create fresh column
-        const freshColumn = document.createElement('div');
-        freshColumn.className = 'column';
-        freshColumn.id = id;
-        if (category) freshColumn.setAttribute('data-category', category);
-        freshColumn.innerHTML = originalContent;
+        // Remove existing listeners to prevent duplicates
+        const newCheckbox = checkbox.cloneNode(true);
+        checkbox.parentNode.replaceChild(newCheckbox, checkbox);
         
-        // Replace old column with fresh one
-        column.parentNode.replaceChild(freshColumn, column);
-        
-        // Initialize checkbox cache BEFORE attaching events
-        const checkboxesInColumn = freshColumn.querySelectorAll('input[type="checkbox"]');
-        freshColumn.checkboxCache = Array.from(checkboxesInColumn);
-        
-        // Load checkbox states from localStorage
-        freshColumn.checkboxCache.forEach(checkbox => {
-            checkbox.checked = localStorage.getItem(checkbox.id) === 'true';
-            
-            // Reattach checkbox events
-            checkbox.addEventListener('change', () => handleCheckboxChange(checkbox));
-            checkbox.addEventListener('click', (event) => {
-                handleShiftClickSelection(event, checkbox, lastCheckedCheckbox);
-                lastCheckedCheckbox = checkbox;
-            });
+        // Add fresh listeners
+        newCheckbox.addEventListener('change', () => handleCheckboxChange(newCheckbox));
+        newCheckbox.addEventListener('click', (event) => {
+            handleShiftClickSelection(event, newCheckbox, lastCheckedCheckbox);
+            lastCheckedCheckbox = newCheckbox;
         });
+    });
 
-        // Reinitialize check-all button
-        const checkAllBtn = freshColumn.querySelector('.check-all-btn');
-        if (checkAllBtn) {
-            // Reset initial state
-            checkAllBtn.classList.remove('checking', 'checked', 'pop', 'reverse-pop');
-            const progressCircle = checkAllBtn.querySelector('.progress-circle');
-            if (progressCircle) {
-                progressCircle.style.strokeDashoffset = CONFIG.ANIMATION.CIRCLE_CIRCUMFERENCE;
+    // Handle check-all button
+    const checkAllBtn = column.querySelector('.check-all-btn');
+    if (checkAllBtn) {
+        // Clone to remove old listeners
+        const newCheckAllBtn = checkAllBtn.cloneNode(true);
+        checkAllBtn.parentNode.replaceChild(newCheckAllBtn, checkAllBtn);
+        
+        // Reset state
+        newCheckAllBtn.classList.remove('checking', 'checked', 'pop', 'reverse-pop');
+        const progressCircle = newCheckAllBtn.querySelector('.progress-circle');
+        if (progressCircle) {
+            progressCircle.style.strokeDashoffset = CONFIG.ANIMATION.CIRCLE_CIRCUMFERENCE;
+        }
+
+        let mouseDownTime;
+        let mouseDownOnCheckedBtn = false;
+        let wasHoldCompleted = false;
+        newCheckAllBtn.isHolding = false;
+
+        // Add fresh listeners
+        newCheckAllBtn.addEventListener('mousedown', () => {
+            const allChecked = column.checkboxCache.every(cb => cb.checked);
+            mouseDownTime = Date.now();
+            wasHoldCompleted = false;
+
+            if (allChecked) {
+                mouseDownOnCheckedBtn = true;
+                return;
             }
 
-            let mouseDownTime;
-            let mouseDownOnCheckedBtn = false;
-            let wasHoldCompleted = false;
-            checkAllBtn.isHolding = false;
+            newCheckAllBtn.isHolding = true;
+            startCheckingAnimation(newCheckAllBtn);
+        });
 
-            // Reattach check-all button events
-            checkAllBtn.addEventListener('mousedown', () => {
-                const allChecked = freshColumn.checkboxCache.every(cb => cb.checked);
-                mouseDownTime = Date.now();
+        newCheckAllBtn.addEventListener('mouseleave', () => {
+            if (mouseDownOnCheckedBtn) {
+                mouseDownOnCheckedBtn = false;
+                return;
+            }
+
+            if (newCheckAllBtn.classList.contains('checking')) {
+                cancelCheckingAnimation(newCheckAllBtn);
+            }
+            newCheckAllBtn.isHolding = false;
+        });
+
+        newCheckAllBtn.addEventListener('mouseup', (e) => {
+            const timeDiff = Date.now() - mouseDownTime;
+            const anyChecked = column.checkboxCache.some(cb => cb.checked);
+
+            if (mouseDownOnCheckedBtn) {
+                if (e.target.closest('.check-all-btn')) {
+                    handleCheckAllButtonClick(newCheckAllBtn);
+                }
+                mouseDownOnCheckedBtn = false;
+                return;
+            }
+
+            if (wasHoldCompleted) {
                 wasHoldCompleted = false;
+                return;
+            }
 
-                if (allChecked) {
-                    mouseDownOnCheckedBtn = true;
-                    return;
-                }
+            if (!newCheckAllBtn.classList.contains('checked') && anyChecked && timeDiff < 200) {
+                newCheckAllBtn.isHolding = false;
+                handleCheckAllButtonClick(newCheckAllBtn);
+            }
+            else if (newCheckAllBtn.classList.contains('checking')) {
+                cancelCheckingAnimation(newCheckAllBtn);
+            }
+            newCheckAllBtn.isHolding = false;
+        });
 
-                checkAllBtn.isHolding = true;
-                startCheckingAnimation(checkAllBtn);
-            });
+        // Update initial state based on actual checkbox states
+        updateCheckAllButtonState(column);
+    }
+});
 
-            checkAllBtn.addEventListener('mouseleave', () => {
-                if (mouseDownOnCheckedBtn) {
-                    mouseDownOnCheckedBtn = false;
-                    return;
-                }
-
-                if (checkAllBtn.classList.contains('checking')) {
-                    cancelCheckingAnimation(checkAllBtn);
-                }
-                checkAllBtn.isHolding = false;
-            });
-
-            checkAllBtn.addEventListener('mouseup', (e) => {
-                const timeDiff = Date.now() - mouseDownTime;
-                const anyChecked = freshColumn.checkboxCache.some(cb => cb.checked);
-
-                if (mouseDownOnCheckedBtn) {
-                    if (e.target.closest('.check-all-btn')) {
-                        handleCheckAllButtonClick(checkAllBtn);
-                    }
-                    mouseDownOnCheckedBtn = false;
-                    return;
-                }
-
-                if (wasHoldCompleted) {
-                    wasHoldCompleted = false;
-                    return;
-                }
-
-                if (!checkAllBtn.classList.contains('checked') && anyChecked && timeDiff < 200) {
-                    checkAllBtn.isHolding = false;
-                    handleCheckAllButtonClick(checkAllBtn);
-                }
-                else if (checkAllBtn.classList.contains('checking')) {
-                    cancelCheckingAnimation(checkAllBtn);
-                }
-                checkAllBtn.isHolding = false;
-            });
-
-            // Update initial state
-            updateCheckAllButtonState(freshColumn);
-        }
+// Update progress bar to reflect current state
+updateProgressBar();
 
         // Reapply bookmarks and attach bookmark events
         freshColumn.querySelectorAll('.cell label').forEach(label => {
