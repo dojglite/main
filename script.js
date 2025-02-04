@@ -315,6 +315,10 @@ function cleanupTransitionElements() {
     document.querySelectorAll('.column').forEach(column => {
         column.classList.remove('exit-left', 'exit-middle', 'exit-right');
     });
+    document.querySelectorAll('.transition-container, .transition-overlay').forEach(el => el.remove());
+    document.querySelectorAll('.column').forEach(column => {
+        column.classList.remove('exit-left', 'exit-middle', 'exit-right');
+    });
 }
 
 
