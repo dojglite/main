@@ -994,29 +994,36 @@ searchInput.addEventListener('input', function() {
     });
 });
 
-(function handleBackNavigation() { // <-- **Now placed AFTER DOMContentLoaded**
-    // For modern browsers
+(function handleBackNavigation() {
     window.addEventListener('pageshow', function(event) {
         if (event.persisted) {
-            document.body.style.opacity = '0';
-            setTimeout(() => location.reload(), 50);
+            console.log("pageshow event triggered - persisted:", event.persisted); // Log event
+
+            // Remove opacity change for now, just focus on reload
+            // document.body.style.opacity = '0';
+
+            setTimeout(() => {
+                console.log("Attempting location.reload()"); // Log before reload
+                location.reload();
+                console.log("location.reload() called"); // Log after reload call
+            }, 100); // Slightly longer delay
+        } else {
+            console.log("pageshow event triggered - not persisted (initial load or forward)");
         }
     });
 
-    // Fallback for older browsers
-    window.onunload = function() {};
+    window.onunload = function() { console.log("unload event triggered"); }; // Keep unload log for now
 
-    // Force scroll restoration to manual
     if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
     }
 
-    // Add cache-buster to links
-    document.querySelectorAll('a').forEach(link => {
-        const url = new URL(link.href);
-        if (url.origin === location.origin) {
-            url.searchParams.set('cache', Date.now());
-            link.href = url.href;
-        }
-    });
+    // REMOVE cache-busting for now - it's likely not helping this issue
+    // document.querySelectorAll('a').forEach(link => {
+    //     const url = new URL(link.href);
+    //     if (url.origin === location.origin) {
+    //         url.searchParams.set('cache', Date.now());
+    //         link.href = url.href;
+    //     }
+    // });
 })();
