@@ -677,11 +677,6 @@ function hideHelpModal() {
     helpModal.classList.remove('active');
 }
 
-// Force page refresh on back navigation
-if (performance.getEntriesByType("navigation")[0].type === "back_forward") {
-    location.reload(true);
-}
-
 // --- Event Listeners and Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize progress counter visibility with delay
@@ -998,3 +993,30 @@ searchInput.addEventListener('input', function() {
         debouncedSearch();
     });
 });
+
+(function handleBackNavigation() { // <-- **Now placed AFTER DOMContentLoaded**
+    // For modern browsers
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            document.body.style.opacity = '0';
+            setTimeout(() => location.reload(), 50);
+        }
+    });
+
+    // Fallback for older browsers
+    window.onunload = function() {};
+
+    // Force scroll restoration to manual
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+
+    // Add cache-buster to links
+    document.querySelectorAll('a').forEach(link => {
+        const url = new URL(link.href);
+        if (url.origin === location.origin) {
+            url.searchParams.set('cache', Date.now());
+            link.href = url.href;
+        }
+    });
+})();
