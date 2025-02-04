@@ -125,12 +125,10 @@ function resetPageState() {
 function handlePageLoad() {
     // Check if we came here via browser back/forward
     if (performance.getEntriesByType("navigation")[0].type === 'back_forward') {
-        // Force a fresh page load but mark it as coming from back navigation
-        sessionStorage.setItem('needsBookmarkRefresh', 'true');
+        // Force a fresh page load
         window.location.reload();
         return;
     }
-}
 }
 
 window.onpageshow = handlePageLoad;
@@ -789,13 +787,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Bookmarks from localStorage and attach context menu listener
     initializeBookmarks();
-      // Check if we need to refresh bookmarks (coming from back navigation)
-      if (sessionStorage.getItem('needsBookmarkRefresh')) {
-        sessionStorage.removeItem('needsBookmarkRefresh');
-        setTimeout(() => {
-            initializeBookmarks(); // Run it again after a small delay
-        }, 100);
-    }
 
     // Attach smooth scroll to anchor links
     document.querySelectorAll('a[href^="#"]').forEach(smoothScrollToAnchor);
