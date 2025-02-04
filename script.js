@@ -121,39 +121,18 @@ function resetPageState() {
     void document.documentElement.offsetHeight;
 }
 
-// Modify the handlePageLoad function
 function handlePageLoad(event) {
-    // Check if this is a back/forward navigation
-    if (performance.getEntriesByType("navigation")[0].type === 'back_forward') {
-        // Remove any transition classes and reset styles immediately
-        document.querySelectorAll('.column').forEach(column => {
-            column.classList.remove('exit-left', 'exit-middle', 'exit-right');
-            column.style.opacity = '1';
-            column.style.transform = 'none';
-            column.style.animation = 'none';
-        });
-
-        // Reset the container visibility
-        const container = document.querySelector('.container');
-        if (container) {
-            container.style.opacity = '1';
-            container.style.visibility = 'visible';
-            container.style.display = '';
-        }
-
-        // Clean up any leftover transition elements
-        const transitionContainer = document.querySelector('.transition-container');
-        const overlay = document.querySelector('.transition-overlay');
-        if (transitionContainer) transitionContainer.remove();
-        if (overlay) overlay.remove();
-
-        // Force a reflow to ensure styles are applied
-        void document.documentElement.offsetHeight;
+    // Always clean up if we're coming from a navigation
+    if (event.persisted || performance.getEntriesByType("navigation")[0].type === 'back_forward') {
+        resetPageState();
     }
-
+    
     // Clear the navigation state
     sessionStorage.removeItem('isNavigating');
 }
+
+window.onpageshow = handlePageLoad;
+window.onpopstate = handlePageLoad;
 
 // --- Progress Bar and Counter Functions ---
 function animateProgressBar(progress) {
@@ -389,10 +368,6 @@ function navigateWithTransition(event) {
         }
     }, 1000);
 }
-
-// Update event listeners
-window.onpageshow = handlePageLoad;
-window.onpopstate = handlePageLoad;
 
 // --- Shift+Click Range Selection Function ---
 function handleShiftClickSelection(event, checkbox, lastChecked) {
