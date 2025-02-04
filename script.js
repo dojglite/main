@@ -52,206 +52,20 @@ fetch('./romaji-to-japanese-map.json')
 
 // Reset overlay animations
 function resetPageState() {
-    // Remove transition elements
+    // Remove any leftover transition elements
     const existingContainer = document.querySelector('.transition-container');
     const existingOverlay = document.querySelector('.transition-overlay');
     
     if (existingContainer) existingContainer.remove();
     if (existingOverlay) existingOverlay.remove();
 
-    // Reset column states
-document.querySelectorAll('.column').forEach(column => {
-    // Instead of recreating the column, let's work with the existing one
-    const checkboxesInColumn = column.querySelectorAll('input[type="checkbox"]');
-    column.checkboxCache = Array.from(checkboxesInColumn);
-    
-    // Restore checkbox states directly
-    column.checkboxCache.forEach(checkbox => {
-        const savedState = localStorage.getItem(checkbox.id);
-        checkbox.checked = savedState === 'true';
-        
-        // Remove existing listeners to prevent duplicates
-        const newCheckbox = checkbox.cloneNode(true);
-        checkbox.parentNode.replaceChild(newCheckbox, checkbox);
-        
-        // Add fresh listeners
-        newCheckbox.addEventListener('change', () => handleCheckboxChange(newCheckbox));
-        newCheckbox.addEventListener('click', (event) => {
-            handleShiftClickSelection(event, newCheckbox, lastCheckedCheckbox);
-            lastCheckedCheckbox = newCheckbox;
-        });
-    });
-
-    // Handle check-all button
-    const checkAllBtn = column.querySelector('.check-all-btn');
-    if (checkAllBtn) {
-        // Clone to remove old listeners
-        const newCheckAllBtn = checkAllBtn.cloneNode(true);
-        checkAllBtn.parentNode.replaceChild(newCheckAllBtn, checkAllBtn);
-        
-        // Reset state
-        newCheckAllBtn.classList.remove('checking', 'checked', 'pop', 'reverse-pop');
-        const progressCircle = newCheckAllBtn.querySelector('.progress-circle');
-        if (progressCircle) {
-            progressCircle.style.strokeDashoffset = CONFIG.ANIMATION.CIRCLE_CIRCUMFERENCE;
-        }
-
-        let mouseDownTime;
-        let mouseDownOnCheckedBtn = false;
-        let wasHoldCompleted = false;
-        newCheckAllBtn.isHolding = false;
-
-        // Add fresh listeners
-        newCheckAllBtn.addEventListener('mousedown', () => {
-            const allChecked = column.checkboxCache.every(cb => cb.checked);
-            mouseDownTime = Date.now();
-            wasHoldCompleted = false;
-
-            if (allChecked) {
-                mouseDownOnCheckedBtn = true;
-                return;
-            }
-
-            newCheckAllBtn.isHolding = true;
-            startCheckingAnimation(newCheckAllBtn);
-        });
-
-        newCheckAllBtn.addEventListener('mouseleave', () => {
-            if (mouseDownOnCheckedBtn) {
-                mouseDownOnCheckedBtn = false;
-                return;
-            }
-
-            if (newCheckAllBtn.classList.contains('checking')) {
-                cancelCheckingAnimation(newCheckAllBtn);
-            }
-            newCheckAllBtn.isHolding = false;
-        });
-
-        newCheckAllBtn.addEventListener('mouseup', (e) => {
-            const timeDiff = Date.now() - mouseDownTime;
-            const anyChecked = column.checkboxCache.some(cb => cb.checked);
-
-            if (mouseDownOnCheckedBtn) {
-                if (e.target.closest('.check-all-btn')) {
-                    handleCheckAllButtonClick(newCheckAllBtn);
-                }
-                mouseDownOnCheckedBtn = false;
-                return;
-            }
-
-            if (wasHoldCompleted) {
-                wasHoldCompleted = false;
-                return;
-            }
-
-            if (!newCheckAllBtn.classList.contains('checked') && anyChecked && timeDiff < 200) {
-                newCheckAllBtn.isHolding = false;
-                handleCheckAllButtonClick(newCheckAllBtn);
-            }
-            else if (newCheckAllBtn.classList.contains('checking')) {
-                cancelCheckingAnimation(newCheckAllBtn);
-            }
-            newCheckAllBtn.isHolding = false;
-        });
-
-        // Update initial state based on actual checkbox states
-        updateCheckAllButtonState(column);
-    }
-});
-
-// Update progress bar to reflect current state
-updateProgressBar();
-
-        // Reapply bookmarks and attach bookmark events
-        freshColumn.querySelectorAll('.cell label').forEach(label => {
-            const checkbox = label.querySelector('input[type="checkbox"]');
-            if (checkbox) {
-                const isBookmarked = localStorage.getItem(`bookmark-${checkbox.id}`) === 'true';
-                if (isBookmarked) {
-                    label.setAttribute('data-bookmarked', '');
-                } else {
-                    label.removeAttribute('data-bookmarked');
-                }
-            }
-            
-            // Reattach bookmark context menu handler
-            label.addEventListener('contextmenu', handleBookmarkContextMenu);
-        });
-    });
-
-    // Reattach smooth scroll to anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(smoothScrollToAnchor);
-
-    // Reinitialize scroll animations
-    const scrollObserver = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                scrollObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0, rootMargin: '50px' });
-
-    document.querySelectorAll('[data-scroll]').forEach(element => {
-        element.classList.remove('is-visible');
-        element.style.opacity = '';
-        element.style.transform = '';
-        void element.offsetHeight; // Force reflow
-        scrollObserver.observe(element);
-    });
-
-    // Reattach page transition listeners
-    document.querySelectorAll('a').forEach(link => {
-        link.removeEventListener('click', navigateWithTransition); // Remove old listener first
-        link.addEventListener('click', navigateWithTransition);
-    });
-
-    // Reattach search modal events
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.removeEventListener('input', debouncedSearch);
-        searchInput.addEventListener('input', function() {
-            selectedResultIndex = -1;
-            debouncedSearch();
-        });
-    }
-
-    // Reattach help modal events
-    const helpModal = document.getElementById('helpModal');
-    const helpCloseBtn = helpModal?.querySelector('.help-close-btn');
-    if (helpCloseBtn) {
-        helpCloseBtn.removeEventListener('click', hideHelpModal);
-        helpCloseBtn.addEventListener('click', hideHelpModal);
-    }
-
-    if (helpModal) {
-        helpModal.removeEventListener('click', (e) => {
-            if (e.target === helpModal) hideHelpModal();
-        });
-        helpModal.addEventListener('click', (e) => {
-            if (e.target === helpModal) hideHelpModal();
-        });
-    }
-
-    // Update progress bar to reflect current state
-    updateProgressBar();
-
-    // Reset page transition container
-    const pageTransitionContainer = document.querySelector('.page-transition-container');
-    if (pageTransitionContainer) {
-        pageTransitionContainer.classList.remove('transitioning');
-        pageTransitionContainer.style.animation = '';
-        pageTransitionContainer.style.transform = '';
-        pageTransitionContainer.style.opacity = '';
-    }
-
-    // Reset container styles
+    // Ensure container is visible
     const container = document.querySelector('.container');
     if (container) {
         container.style.opacity = '';
         container.style.transform = '';
         container.style.visibility = 'visible';
+        container.style.display = '';
         container.style.display = 'grid';
     }
 
@@ -260,29 +74,10 @@ updateProgressBar();
 }
 
 function handlePageLoad(event) {
-    if (event.persisted || (performance.getEntriesByType("navigation")[0]?.type === 'back_forward')) {
-        // Ensure DOM is fully loaded before resetting state
-        if (document.readyState === 'complete') {
-            resetPageState();
-        } else {
-            window.addEventListener('load', () => resetPageState(), { once: true });
-        }
-        
-        // Double-check cleanup after a short delay
-        setTimeout(() => {
-            const needsReset = Array.from(document.querySelectorAll('.column')).some(column => 
-                column.classList.contains('exit-left') || 
-                column.classList.contains('exit-middle') || 
-                column.classList.contains('exit-right')
-            );
-            
-            if (needsReset) {
-                resetPageState();
-            }
-        }, 50);
+    // If coming from back/forward navigation, just reload the page
+    if (event.persisted || performance.getEntriesByType("navigation")[0].type === 'back_forward') {
+        window.location.reload();
     }
-    
-    sessionStorage.removeItem('isNavigating');
 }
 
 window.onpageshow = handlePageLoad;
@@ -485,10 +280,8 @@ function navigateWithTransition(event) {
                 overlay.style.opacity = '1';
                 
                 setTimeout(() => {
-                    // Store transition state in session storage
-                    sessionStorage.setItem('isNavigating', 'true');
                     window.location.href = targetUrl;
-                }, 300);
+                }, 150);
             });
         }
     };
@@ -1254,9 +1047,4 @@ searchInput.addEventListener('input', function() {
         selectedResultIndex = -1;
         debouncedSearch();
     });
-
-    if (sessionStorage.getItem('isNavigating') === 'true') {
-        resetPageState();
-        sessionStorage.removeItem('isNavigating');
-    }
 });
