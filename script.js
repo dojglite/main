@@ -71,38 +71,16 @@ function resetPageState() {
         column.style.opacity = '';
         column.style.transform = '';
         column.style.animation = '';
-    });
-
-    // Reset all scroll-reveal elements
-    document.querySelectorAll('[data-scroll]').forEach(element => {
-        // Remove the visibility class
-        element.classList.remove('is-visible');
-        // Reset any transform/opacity styles
-        element.style.opacity = '';
-        element.style.transform = '';
-        // Force a reflow
-        void element.offsetHeight;
-    });
-
-    // Re-initialize the intersection observer for scroll animations
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0, rootMargin: '50px' });
-
-    // Re-observe all scroll elements
-    document.querySelectorAll('[data-scroll]').forEach(element => {
-        observer.observe(element);
+        // Remove any cloned columns that might be left over
+        const clonedColumns = document.querySelectorAll('.column.exit-left, .column.exit-middle, .column.exit-right');
+        clonedColumns.forEach(clone => clone.remove());
     });
 
     // Reset the page-transition-container if it exists
     const pageTransitionContainer = document.querySelector('.page-transition-container');
     if (pageTransitionContainer) {
         pageTransitionContainer.classList.remove('transitioning');
+        // Reset its styles
         pageTransitionContainer.style.animation = '';
         pageTransitionContainer.style.transform = '';
         pageTransitionContainer.style.opacity = '';
@@ -116,9 +94,6 @@ function resetPageState() {
         container.style.visibility = 'visible';
         container.style.display = '';
     }
-
-    // Force a reflow of the entire page
-    void document.documentElement.offsetHeight;
 }
 
 function handlePageLoad() {
