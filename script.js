@@ -299,22 +299,33 @@ function navigateWithTransition(event) {
 
 // Function to clean up transition elements and classes
 function cleanupTransitionElements() {
-    // Remove transition container if it exists
-    const transitionContainer = document.querySelector('.transition-container');
-    if (transitionContainer) {
-        transitionContainer.remove();
-    }
+    // Remove all transition-related elements
+    const elementsToRemove = [
+        '.transition-container',
+        '.transition-overlay',
+        '[style*="position: fixed"]'  // Remove any fixed position overlays
+    ].join(',');
+    
+    document.querySelectorAll(elementsToRemove).forEach(el => {
+        // Only remove if it's a transition element
+        if (el.classList.contains('transition-container') ||
+            el.classList.contains('transition-overlay') ||
+            (el.style.position === 'fixed' && el.style.zIndex > 9000)) {
+            el.remove();
+        }
+    });
 
-    // Remove transition overlay if it exists
-    const transitionOverlay = document.querySelector('.transition-overlay');
-    if (transitionOverlay) {
-        transitionOverlay.remove();
-    }
-
-    // Remove exit classes from columns
+    // Clean up column classes
     document.querySelectorAll('.column').forEach(column => {
         column.classList.remove('exit-left', 'exit-middle', 'exit-right');
     });
+
+    // Reset any transition-related styles on the container
+    const container = document.querySelector('.container');
+    if (container) {
+        container.style.opacity = '';
+        container.style.transform = '';
+    }
 }
 
 
@@ -733,7 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 width: 100%;
                 height: 100%;
                 background-color: var(--background);
-                opacity: 1;
+                opacity: 0;
                 z-index: 9999;
                 transition: opacity 0.3s ease;
             `;
