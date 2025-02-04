@@ -22,7 +22,7 @@ const CONFIG = {
     ANIMATION: {
         DURATION: 200,
         HIGHLIGHT_TIMEOUT: 7000,
-        PROGRESS_STEP: 0.005,
+        PROGRESS_STEP: 0.006,
         CIRCLE_CIRCUMFERENCE: 62.83
     },
     SEARCH: {
@@ -71,16 +71,38 @@ function resetPageState() {
         column.style.opacity = '';
         column.style.transform = '';
         column.style.animation = '';
-        // Remove any cloned columns that might be left over
-        const clonedColumns = document.querySelectorAll('.column.exit-left, .column.exit-middle, .column.exit-right');
-        clonedColumns.forEach(clone => clone.remove());
+    });
+
+    // Reset all scroll-reveal elements
+    document.querySelectorAll('[data-scroll]').forEach(element => {
+        // Remove the visibility class
+        element.classList.remove('is-visible');
+        // Reset any transform/opacity styles
+        element.style.opacity = '';
+        element.style.transform = '';
+        // Force a reflow
+        void element.offsetHeight;
+    });
+
+    // Re-initialize the intersection observer for scroll animations
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0, rootMargin: '50px' });
+
+    // Re-observe all scroll elements
+    document.querySelectorAll('[data-scroll]').forEach(element => {
+        observer.observe(element);
     });
 
     // Reset the page-transition-container if it exists
     const pageTransitionContainer = document.querySelector('.page-transition-container');
     if (pageTransitionContainer) {
         pageTransitionContainer.classList.remove('transitioning');
-        // Reset its styles
         pageTransitionContainer.style.animation = '';
         pageTransitionContainer.style.transform = '';
         pageTransitionContainer.style.opacity = '';
@@ -94,17 +116,44 @@ function resetPageState() {
         container.style.visibility = 'visible';
         container.style.display = '';
     }
+
+    // Force a reflow of the entire page
+    void document.documentElement.offsetHeight;
 }
 
-function handlePageLoad() {
+// Modify the handlePageLoad function
+function handlePageLoad(event) {
+    // Check if this is a back/forward navigation
     if (performance.getEntriesByType("navigation")[0].type === 'back_forward') {
-        window.location.reload();
-        return;
-    }
-}
+        // Remove any transition classes and reset styles immediately
+        document.querySelectorAll('.column').forEach(column => {
+            column.classList.remove('exit-left', 'exit-middle', 'exit-right');
+            column.style.opacity = '1';
+            column.style.transform = 'none';
+            column.style.animation = 'none';
+        });
 
-window.onpageshow = handlePageLoad;
-window.onpopstate = handlePageLoad;
+        // Reset the container visibility
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.opacity = '1';
+            container.style.visibility = 'visible';
+            container.style.display = '';
+        }
+
+        // Clean up any leftover transition elements
+        const transitionContainer = document.querySelector('.transition-container');
+        const overlay = document.querySelector('.transition-overlay');
+        if (transitionContainer) transitionContainer.remove();
+        if (overlay) overlay.remove();
+
+        // Force a reflow to ensure styles are applied
+        void document.documentElement.offsetHeight;
+    }
+
+    // Clear the navigation state
+    sessionStorage.removeItem('isNavigating');
+}
 
 // --- Progress Bar and Counter Functions ---
 function animateProgressBar(progress) {
@@ -340,6 +389,10 @@ function navigateWithTransition(event) {
         }
     }, 1000);
 }
+
+// Update event listeners
+window.onpageshow = handlePageLoad;
+window.onpopstate = handlePageLoad;
 
 // --- Shift+Click Range Selection Function ---
 function handleShiftClickSelection(event, checkbox, lastChecked) {
