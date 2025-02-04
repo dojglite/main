@@ -22,7 +22,7 @@ const CONFIG = {
     ANIMATION: {
         DURATION: 200,
         HIGHLIGHT_TIMEOUT: 7000,
-        PROGRESS_STEP: 0.006,
+        PROGRESS_STEP: 0.005,
         CIRCLE_CIRCUMFERENCE: 62.83
     },
     SEARCH: {
@@ -121,11 +121,8 @@ function resetPageState() {
     void document.documentElement.offsetHeight;
 }
 
-// Add this near the top of your script.js, after resetPageState but before other functions
 function handlePageLoad() {
-    // Check if we came here via browser back/forward
     if (performance.getEntriesByType("navigation")[0].type === 'back_forward') {
-        // Force a fresh page load
         window.location.reload();
         return;
     }
