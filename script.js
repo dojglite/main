@@ -121,15 +121,18 @@ function resetPageState() {
     void document.documentElement.offsetHeight;
 }
 
-// Add this event listener for handling back/forward navigation
-window.onpageshow = function(event) {
-    resetPageState(); // Always reset, not just when persisted
-};
+// Add this near the top of your script.js, after resetPageState but before other functions
+function handlePageLoad() {
+    // Check if we came here via browser back/forward
+    if (performance.getEntriesByType("navigation")[0].type === 'back_forward') {
+        // Force a fresh page load
+        window.location.reload();
+        return;
+    }
+}
 
-// Also add this
-window.addEventListener('popstate', function(event) {
-    resetPageState();
-});
+window.onpageshow = handlePageLoad;
+window.onpopstate = handlePageLoad;
 
 // --- Progress Bar and Counter Functions ---
 function animateProgressBar(progress) {
