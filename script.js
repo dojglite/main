@@ -76,17 +76,25 @@ function resetPageState() {
         // Replace old column with fresh one
         column.parentNode.replaceChild(freshColumn, column);
         
-        // Initialize checkbox cache
+        // Initialize checkbox cache BEFORE attaching events
         const checkboxesInColumn = freshColumn.querySelectorAll('input[type="checkbox"]');
         freshColumn.checkboxCache = Array.from(checkboxesInColumn);
         
+        // Load checkbox states from localStorage
+        freshColumn.checkboxCache.forEach(checkbox => {
+            checkbox.checked = localStorage.getItem(checkbox.id) === 'true';
+            
+            // Reattach checkbox events
+            checkbox.addEventListener('change', () => handleCheckboxChange(checkbox));
+            checkbox.addEventListener('click', (event) => {
+                handleShiftClickSelection(event, checkbox, lastCheckedCheckbox);
+                lastCheckedCheckbox = checkbox;
+            });
+        });
+
         // Reinitialize check-all button
         const checkAllBtn = freshColumn.querySelector('.check-all-btn');
         if (checkAllBtn) {
-            let mouseDownTime;
-            let mouseDownOnCheckedBtn = false;
-            let wasHoldCompleted = false;
-
             // Reset initial state
             checkAllBtn.classList.remove('checking', 'checked', 'pop', 'reverse-pop');
             const progressCircle = checkAllBtn.querySelector('.progress-circle');
@@ -94,7 +102,12 @@ function resetPageState() {
                 progressCircle.style.strokeDashoffset = CONFIG.ANIMATION.CIRCLE_CIRCUMFERENCE;
             }
 
-            // Reattach event listeners
+            let mouseDownTime;
+            let mouseDownOnCheckedBtn = false;
+            let wasHoldCompleted = false;
+            checkAllBtn.isHolding = false;
+
+            // Reattach check-all button events
             checkAllBtn.addEventListener('mousedown', () => {
                 const allChecked = freshColumn.checkboxCache.every(cb => cb.checked);
                 mouseDownTime = Date.now();
@@ -147,14 +160,13 @@ function resetPageState() {
                 }
                 checkAllBtn.isHolding = false;
             });
+
+            // Update initial state
+            updateCheckAllButtonState(freshColumn);
         }
 
-        // Reapply bookmarks
+        // Reapply bookmarks and attach bookmark events
         freshColumn.querySelectorAll('.cell label').forEach(label => {
-            if (label.closest('.cell').hasAttribute('data-scroll')) {
-                label.closest('.cell').setAttribute('data-scroll', '');
-            }
-            
             const checkbox = label.querySelector('input[type="checkbox"]');
             if (checkbox) {
                 const isBookmarked = localStorage.getItem(`bookmark-${checkbox.id}`) === 'true';
@@ -165,37 +177,69 @@ function resetPageState() {
                 }
             }
             
+            // Reattach bookmark context menu handler
             label.addEventListener('contextmenu', handleBookmarkContextMenu);
         });
-
-        updateCheckAllButtonState(freshColumn);
     });
 
-    // Reset and reapply scroll animations
-    document.querySelectorAll('[data-scroll]').forEach(element => {
-        // Remove the visibility class but keep the data-scroll attribute
-        element.classList.remove('is-visible');
-        element.style.opacity = '';
-        element.style.transform = '';
-        // Force a reflow
-        void element.offsetHeight;
-    });
+    // Reattach smooth scroll to anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(smoothScrollToAnchor);
 
-    // Re-initialize the intersection observer for scroll animations
-    const observer = new IntersectionObserver(entries => {
+    // Reinitialize scroll animations
+    const scrollObserver = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
+                scrollObserver.unobserve(entry.target);
             }
         });
     }, { threshold: 0, rootMargin: '50px' });
 
-    // Re-observe all scroll elements
     document.querySelectorAll('[data-scroll]').forEach(element => {
-        observer.observe(element);
+        element.classList.remove('is-visible');
+        element.style.opacity = '';
+        element.style.transform = '';
+        void element.offsetHeight; // Force reflow
+        scrollObserver.observe(element);
     });
 
+    // Reattach page transition listeners
+    document.querySelectorAll('a').forEach(link => {
+        link.removeEventListener('click', navigateWithTransition); // Remove old listener first
+        link.addEventListener('click', navigateWithTransition);
+    });
+
+    // Reattach search modal events
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.removeEventListener('input', debouncedSearch);
+        searchInput.addEventListener('input', function() {
+            selectedResultIndex = -1;
+            debouncedSearch();
+        });
+    }
+
+    // Reattach help modal events
+    const helpModal = document.getElementById('helpModal');
+    const helpCloseBtn = helpModal?.querySelector('.help-close-btn');
+    if (helpCloseBtn) {
+        helpCloseBtn.removeEventListener('click', hideHelpModal);
+        helpCloseBtn.addEventListener('click', hideHelpModal);
+    }
+
+    if (helpModal) {
+        helpModal.removeEventListener('click', (e) => {
+            if (e.target === helpModal) hideHelpModal();
+        });
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) hideHelpModal();
+        });
+    }
+
+    // Update progress bar to reflect current state
+    updateProgressBar();
+
+    // Reset page transition container
     const pageTransitionContainer = document.querySelector('.page-transition-container');
     if (pageTransitionContainer) {
         pageTransitionContainer.classList.remove('transitioning');
@@ -204,36 +248,39 @@ function resetPageState() {
         pageTransitionContainer.style.opacity = '';
     }
 
-    // Ensure container is visible and properly styled
+    // Reset container styles
     const container = document.querySelector('.container');
     if (container) {
         container.style.opacity = '';
         container.style.transform = '';
         container.style.visibility = 'visible';
-        container.style.display = '';
-        // Force grid layout refresh
         container.style.display = 'grid';
     }
 
-    // Force a reflow of the entire page
+    // Force a reflow
     void document.documentElement.offsetHeight;
 }
 
-
 function handlePageLoad(event) {
-    // Always clean up if we're coming from a navigation
-    if (event.persisted || performance.getEntriesByType("navigation")[0].type === 'back_forward') {
-        resetPageState();
+    if (event.persisted || (performance.getEntriesByType("navigation")[0]?.type === 'back_forward')) {
+        // Ensure DOM is fully loaded before resetting state
+        if (document.readyState === 'complete') {
+            resetPageState();
+        } else {
+            window.addEventListener('load', () => resetPageState(), { once: true });
+        }
         
-        // Double-check cleanup
+        // Double-check cleanup after a short delay
         setTimeout(() => {
-            document.querySelectorAll('.column').forEach(column => {
-                if (column.classList.contains('exit-left') || 
-                    column.classList.contains('exit-middle') || 
-                    column.classList.contains('exit-right')) {
-                    resetPageState();
-                }
-            });
+            const needsReset = Array.from(document.querySelectorAll('.column')).some(column => 
+                column.classList.contains('exit-left') || 
+                column.classList.contains('exit-middle') || 
+                column.classList.contains('exit-right')
+            );
+            
+            if (needsReset) {
+                resetPageState();
+            }
         }, 50);
     }
     
