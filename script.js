@@ -218,52 +218,74 @@ function updateScrollProgressIndicator() {
 
 // --- Page Transition Function ---
 function navigateWithTransition(event) {
-    event.preventDefault();
+    if (event) {
+        event.preventDefault();
+    }
+    
     const targetUrl = event.currentTarget.href;
     
-    // Create transition elements
+    // Clean up any existing transition elements
+    cleanupTransitionElements();
+    
+    // Create a full-screen overlay that will persist during navigation
+    const overlay = document.createElement('div');
+    overlay.className = 'transition-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--background);
+        opacity: 0;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+    `;
+    document.body.appendChild(overlay);
+
+    // Create container for animation
     const transitionContainer = document.createElement('div');
     transitionContainer.className = 'transition-container';
     document.body.appendChild(transitionContainer);
 
-    // Add overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'transition-overlay';
-    document.body.appendChild(overlay);
-
-    // Add exit animations to columns
     const columns = document.querySelectorAll('.column');
     let animationsCompleted = 0;
     const totalAnimations = columns.length;
 
-    // Function to check if all animations are done
+    const performNavigation = () => {
+        // Ensure the overlay is fully opaque before navigating
+        overlay.style.opacity = '1';
+        
+        // Wait for overlay to fade in, then navigate
+        setTimeout(() => {
+            // Save the overlay element reference in sessionStorage
+            sessionStorage.setItem('pageTransition', 'true');
+            window.location.href = targetUrl;
+        }, 300); // Match the overlay transition duration
+    };
+
     const checkAnimationsComplete = () => {
         animationsCompleted++;
         if (animationsCompleted >= totalAnimations) {
-            // All animations complete, now fade in overlay and navigate
-            requestAnimationFrame(() => {
-                overlay.style.opacity = '1';
-                
-                // Wait for overlay fade to complete before navigation
-                setTimeout(() => {
-                    window.location.href = targetUrl;
-                }, 300); 
-            });
+            performNavigation();
         }
     };
 
-    // Add animation end listeners to each column
+    // If no columns, navigate immediately
+    if (totalAnimations === 0) {
+        performNavigation();
+        return;
+    }
+
+    // Animate columns out
     columns.forEach((column, index) => {
         const animationClass = index === 0 ? 'exit-left' :
                              index === 1 ? 'exit-middle' : 'exit-right';
         
-        // Clone the column to prevent animation interruption
         const clonedColumn = column.cloneNode(true);
         column.parentNode.replaceChild(clonedColumn, column);
-        
         clonedColumn.classList.add(animationClass);
         
-        // Listen for both animation end events
         const handleAnimationEnd = (e) => {
             if (e.animationName === 'columnExit' || e.animationName === 'columnFade') {
                 checkAnimationsComplete();
@@ -273,14 +295,28 @@ function navigateWithTransition(event) {
         
         clonedColumn.addEventListener('animationend', handleAnimationEnd);
     });
-
-    // Backup timeout in case animations fail
-    setTimeout(() => {
-        if (animationsCompleted < totalAnimations) {
-            window.location.href = targetUrl;
-        }
-    }, 1000); // Fallback timeout
 }
+
+// Function to clean up transition elements and classes
+function cleanupTransitionElements() {
+    // Remove transition container if it exists
+    const transitionContainer = document.querySelector('.transition-container');
+    if (transitionContainer) {
+        transitionContainer.remove();
+    }
+
+    // Remove transition overlay if it exists
+    const transitionOverlay = document.querySelector('.transition-overlay');
+    if (transitionOverlay) {
+        transitionOverlay.remove();
+    }
+
+    // Remove exit classes from columns
+    document.querySelectorAll('.column').forEach(column => {
+        column.classList.remove('exit-left', 'exit-middle', 'exit-right');
+    });
+}
+
 
 // --- Shift+Click Range Selection Function ---
 function handleShiftClickSelection(event, checkbox, lastChecked) {
@@ -686,6 +722,34 @@ function hideHelpModal() {
 
 // --- Event Listeners and Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+        // Check if we just came from a transition
+        if (sessionStorage.getItem('pageTransition')) {
+            // Create a fade-in effect for the new page
+            const fadeOverlay = document.createElement('div');
+            fadeOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: var(--background);
+                opacity: 1;
+                z-index: 9999;
+                transition: opacity 0.3s ease;
+            `;
+            document.body.appendChild(fadeOverlay);
+    
+            // Remove the transition flag
+            sessionStorage.removeItem('pageTransition');
+    
+            // Fade out the overlay after a brief delay
+            requestAnimationFrame(() => {
+                fadeOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    fadeOverlay.remove();
+                }, 300); // Match the fade duration
+            });
+        }
     // Initialize progress counter visibility with delay
     setTimeout(() => progressCounter.classList.add('visible'), 500);
 
@@ -1013,4 +1077,17 @@ searchInput.addEventListener('input', function() {
         selectedResultIndex = -1;
         debouncedSearch();
     });
+
+window.addEventListener('popstate', () => {
+    // Clean up any transition elements that might be present
+    cleanupTransitionElements();
+    
+    // Reset the container and columns to their original state
+    const container = document.querySelector('.container');
+    if (container) {
+        container.style.opacity = '1';
+        container.style.transform = 'none';
+    }
+});
+
 });

@@ -5,7 +5,7 @@
 
         @font-face {
             font-family: 'BIZUDGothic-Regular';
-            src: url('BIZUDGothic-Regular.woff') format('woff');
+            src: url('BIZUDGothic-Regular.ttf') format('truetype');
         }
 
         /* --- Root Variables (CSS Custom Properties) --- */
