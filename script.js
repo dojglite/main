@@ -125,6 +125,19 @@ function resetPageState() {
 function handlePageLoad() {
     // Check if we came here via browser back/forward
     if (performance.getEntriesByType("navigation")[0].type === 'back_forward') {
+        // Before reloading, let's sync the bookmark states
+        document.querySelectorAll('.cell label').forEach(label => {
+            const checkbox = label.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                const isBookmarked = localStorage.getItem(`bookmark-${checkbox.id}`) === 'true';
+                if (isBookmarked) {
+                    label.setAttribute('data-bookmarked', '');
+                } else {
+                    label.removeAttribute('data-bookmarked');
+                }
+            }
+        });
+        
         // Force a fresh page load
         window.location.reload();
         return;
