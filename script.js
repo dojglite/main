@@ -240,30 +240,27 @@ function navigateWithTransition(event) {
     const checkAnimationsComplete = () => {
         animationsCompleted++;
         if (animationsCompleted >= totalAnimations) {
-            // All animations complete, now fade in overlay and navigate
             requestAnimationFrame(() => {
                 overlay.style.opacity = '1';
                 
                 // Wait for overlay fade to complete before navigation
                 setTimeout(() => {
+                    cleanupTransitionElements(); // Clean up before navigation
                     window.location.href = targetUrl;
                 }, 300); 
             });
         }
     };
 
-    // Add animation end listeners to each column
     columns.forEach((column, index) => {
         const animationClass = index === 0 ? 'exit-left' :
                              index === 1 ? 'exit-middle' : 'exit-right';
         
-        // Clone the column to prevent animation interruption
         const clonedColumn = column.cloneNode(true);
         column.parentNode.replaceChild(clonedColumn, column);
         
         clonedColumn.classList.add(animationClass);
         
-        // Listen for both animation end events
         const handleAnimationEnd = (e) => {
             if (e.animationName === 'columnExit' || e.animationName === 'columnFade') {
                 checkAnimationsComplete();
@@ -274,13 +271,94 @@ function navigateWithTransition(event) {
         clonedColumn.addEventListener('animationend', handleAnimationEnd);
     });
 
-    // Backup timeout in case animations fail
+    // Backup timeout
     setTimeout(() => {
+        cleanupTransitionElements(); // Clean up if animations fail
         if (animationsCompleted < totalAnimations) {
             window.location.href = targetUrl;
         }
-    }, 1000); // Fallback timeout
+    }, 1000);
 }
+
+// Modify your existing navigateWithTransition function
+function navigateWithTransition(event) {
+    if (!event.currentTarget.href) return; // Guard clause for invalid links
+    event.preventDefault();
+    const targetUrl = event.currentTarget.href;
+    
+    // Create transition elements
+    const transitionContainer = document.createElement('div');
+    transitionContainer.className = 'transition-container';
+    document.body.appendChild(transitionContainer);
+
+    // Add overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'transition-overlay';
+    document.body.appendChild(overlay);
+
+    // Add exit animations to columns
+    const columns = document.querySelectorAll('.column');
+    let animationsCompleted = 0;
+    const totalAnimations = columns.length;
+
+    // Function to handle navigation
+    const navigateToPage = () => {
+        window.location.href = targetUrl;
+    };
+
+    // Function to check if all animations are done
+    const checkAnimationsComplete = () => {
+        animationsCompleted++;
+        if (animationsCompleted >= totalAnimations) {
+            requestAnimationFrame(() => {
+                overlay.style.opacity = '1';
+                setTimeout(navigateToPage, 300);
+            });
+        }
+    };
+
+    columns.forEach((column, index) => {
+        const animationClass = index === 0 ? 'exit-left' :
+                             index === 1 ? 'exit-middle' : 'exit-right';
+        
+        const clonedColumn = column.cloneNode(true);
+        column.parentNode.replaceChild(clonedColumn, column);
+        
+        clonedColumn.classList.add(animationClass);
+        
+        const handleAnimationEnd = (e) => {
+            if (e.animationName === 'columnExit' || e.animationName === 'columnFade') {
+                checkAnimationsComplete();
+                clonedColumn.removeEventListener('animationend', handleAnimationEnd);
+            }
+        };
+        
+        clonedColumn.addEventListener('animationend', handleAnimationEnd);
+    });
+
+    // Backup timeout for navigation
+    setTimeout(navigateToPage, 1000);
+}
+
+function cleanupTransitionElements() {
+    // Remove transition container
+    const transitionContainer = document.querySelector('.transition-container');
+    if (transitionContainer) {
+        transitionContainer.remove();
+    }
+
+    // Remove transition overlay
+    const overlay = document.querySelector('.transition-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+
+    // Remove exit classes from columns
+    document.querySelectorAll('.column').forEach(column => {
+        column.classList.remove('exit-left', 'exit-middle', 'exit-right');
+    });
+}
+
 
 // --- Shift+Click Range Selection Function ---
 function handleShiftClickSelection(event, checkbox, lastChecked) {
@@ -1012,5 +1090,9 @@ helpModal.addEventListener('contextmenu', (e) => {
 searchInput.addEventListener('input', function() {
         selectedResultIndex = -1;
         debouncedSearch();
+    });
+
+    window.addEventListener('popstate', () => {
+        cleanupTransitionElements();
     });
 });
