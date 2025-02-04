@@ -677,6 +677,10 @@ function hideHelpModal() {
     helpModal.classList.remove('active');
 }
 
+// Force page refresh on back navigation
+if (performance.getEntriesByType("navigation")[0].type === "back_forward") {
+    location.reload(true);
+}
 
 // --- Event Listeners and Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
