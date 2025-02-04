@@ -315,10 +315,6 @@ function cleanupTransitionElements() {
     document.querySelectorAll('.column').forEach(column => {
         column.classList.remove('exit-left', 'exit-middle', 'exit-right');
     });
-    document.querySelectorAll('.transition-container, .transition-overlay').forEach(el => el.remove());
-    document.querySelectorAll('.column').forEach(column => {
-        column.classList.remove('exit-left', 'exit-middle', 'exit-right');
-    });
 }
 
 
@@ -737,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 width: 100%;
                 height: 100%;
                 background-color: var(--background);
-                opacity: 1;
+                opacity: 0;
                 z-index: 9999;
                 transition: opacity 0.3s ease;
             `;
