@@ -5,7 +5,11 @@
 
         @font-face {
             font-family: 'BIZUDGothic-Regular';
+<<<<<<< HEAD
             src: url('BIZUDGothic-Regular.ttf') format('truetype');
+=======
+            src: url('BIZUDGothic-Regular.woff') format('woff'),
+>>>>>>> parent of 1a5a991 (fix syntax error)
         }
 
         /* --- Root Variables (CSS Custom Properties) --- */
