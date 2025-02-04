@@ -1,0 +1,471 @@
+/* --- Root Variables (CSS Custom Properties) for the inner pages .html--- */
+:root {
+    --primary: #7C4DFF;
+    --primary-dark: #651FFF;
+    --background: #121212;
+    --surface: rgba(30, 30, 30, 0.8);
+    --surface-hover: #2D2D2D;
+    --text-primary: #FFFFFF;
+    --text-secondary: #B0B0B0;
+    --checked-bg: rgba(124, 77, 255, 0.1);
+    --checked-hover-bg: rgba(124, 77, 255, 0.2);
+    --gradient-start: rgba(124, 77, 255, 0.14);
+    --gradient-end: rgba(101, 31, 255, 0.01);
+    --success: #4CAF50;
+    --text-primary-rgba: rgba(255, 255, 255, 0.9);
+    font-size: 25px;
+}
+
+/* --- Base Styles --- */
+body {
+    background-color: var(--background);
+    background: linear-gradient(
+        45deg,
+        #121212,
+        #1a1a1a 45%,
+        #161417 75%,
+        #121212
+    );
+    color: var(--text-primary);
+    font-family: 'TsukuMinPr6N-R', 'Hiragino Mincho ProN', 'MS PMincho', serif;
+    line-height: 1.6;
+    margin: 0;
+    min-height: 100vh;
+    /* position: relative; <-  sticky buttons don't work with this */
+    font-size: 28px;
+}
+
+@keyframes contentEnter {
+    0% {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+body::before { 
+    content: '';
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(124, 77, 255, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 75% 60%, rgba(124, 77, 255, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* --- Container Styles --- */
+.bodymargin {
+    max-width: 44em;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    position: relative;
+    background: rgba(18, 18, 18, 0.7);
+    border: 1px solid rgba(124, 77, 255, 0.1);
+    border-radius: 16px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        inset 0 0 32px rgba(124, 77, 255, 0.05);
+}
+
+/* --- Navigation Links --- */
+.dojgprev a, .dojgnext a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+.dojgprev a {
+    float: left;
+    margin-top: -1.8em;
+}
+
+.dojgnext a {
+    float: right;
+    margin-top: -1.8em;
+}
+
+.dojgnext a:hover, .dojgprev a:hover {
+    color: var(--text-primary);
+    transform: translateY(-2px);
+}
+
+/* --- Structure and Headers --- */
+.structure {
+    font-size: 2em;
+    font-weight: 600;
+    margin: 1em 0;
+    color:#9f7eff;
+    text-shadow: 0 0 20px rgba(124, 77, 255, 0.3);
+}
+
+h4 {
+    color:#9f7eff;
+    margin: 1.5rem 0;
+    padding-bottom: 0.1rem;
+    position: relative;
+    font-size: larger;
+}
+
+.sub2 {
+    font-size: 0.8em;
+    color: var(--text-secondary);
+}
+
+/* --- Links --- */
+a.underscore {
+    background: linear-gradient(135deg, #c0abff 20%, #9f7eff 30%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 500;
+    text-shadow: 
+        0 0 8px rgba(124, 77, 255, 0.5),
+        0 0 4px rgba(145, 123, 204, 0.15),
+        0 1px 1px rgba(253, 253, 253, 0.4);
+    position: relative;
+    display: inline-block;
+    padding: 0 0px;
+    margin: 0 1px;
+    text-decoration: none; /* Remove default underline */
+    transition: all 0.3s ease; /* Smooth hover effect */
+}
+
+/* Hover effect for .underscore links */
+a.underscore:hover {
+    text-shadow: 
+        0 0 12px rgba(124, 77, 255, 0.7),
+        0 0 4px rgba(124, 77, 255, 0.5),
+        0 2px 2px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px); /* Slight lift on hover */
+}
+
+/* Image color */
+.dojgimg-container {
+    background: var(--background); /* Your dark #121212 */
+    border-radius: 8px;
+    padding: 0.75rem;
+    max-width: 90%;
+    margin: 1.5rem auto;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        inset 0 0 32px rgba(124, 77, 255, 0.03);
+    border: 1px solid rgba(124, 77, 255, 0.08);
+    background: linear-gradient(
+        45deg,
+        #121212,
+        #1a1a1a 45%,
+        #161417 75%,
+        #121212
+    );
+    transition: all 0.3s ease;
+}
+
+.dojgimg {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: invert(0.9) hue-rotate(180deg) brightness(0.9) contrast(0.95);
+}
+
+.dojgimg-container:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+        0 10px 32px rgba(0, 0, 0, 0.25),
+        inset 0 0 32px rgba(124, 77, 255, 0.05);
+    border-color: rgba(124, 77, 255, 0.15);
+}
+
+/* --- Tables --- */
+table.dojgtab {
+    width: 98%;
+    margin: 0.5em 0.5em;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+table.dojgtab td {
+    padding: 1em;
+    border: 1px solid rgba(124, 77, 255, 0.1);
+    font-size: 0.9em;
+    transition: background-color 0.3s ease-out;
+}
+
+table.dojgtab tr:hover td {
+    background: var(--surface-hover);
+}
+
+/* --- Dividers --- */
+hr.dotted {
+    width: 100%;
+    margin: 30px 0;
+    border: none;
+    border-top: 1px dashed rgba(124, 77, 255, 0.2);
+}
+
+/* --- Text Styles --- */
+.colour, .concept {
+    background: linear-gradient(135deg, #c0abff 20%, #9f7eff 30%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 500;
+    text-shadow: 
+        0 0 8px rgba(124, 77, 255, 0.5),
+        0 0 4px rgba(145, 123, 204, 0.15),
+        0 1px 1px rgba(253, 253, 253, 0.4);
+    position: relative;
+    display: inline-block;
+    padding: 0 0px;
+    margin: 0 1px;
+}
+
+.colour2 {
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.bold {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* --- Lists --- */
+ul.tod {
+    padding: 0.25em;
+    margin-left: 0.8em;
+    list-style-type: none;
+}
+
+li.tod {
+    padding: 0.5em 1em;
+    margin: 0.5em 0;
+    background: var(--surface);
+    border-radius: 8px;
+    transition: all 0.3s ease-out;
+}
+
+li.tod:hover {
+    background: var(--surface-hover);
+    transform: translateX(4px);
+}
+
+/* --- Scrollbar Styles --- */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    background: transparent;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background);
+    border-radius: 8px;
+    margin: 12px;
+    border: 1px solid rgba(124, 77, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(124, 77, 255, 0.5);
+    border-radius: 8px;
+    border: 2px solid var(--background);
+    transition: all 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(124, 77, 255, 0.7);
+}
+
+/* --- Media Queries --- */
+@media (max-width: 768px) {
+    :root {
+        font-size: 16px;
+    }
+
+    .bodymargin {
+        padding: 0 1rem;
+        margin: 1rem;
+    }
+
+    table.dojgtab {
+        margin: 1em 0;
+        width: 100%;
+    }
+}
+/* Back to Top Button */
+#backtop {
+    position: fixed !important;
+    right: 3rem !important;
+    bottom: 2rem !important;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    background: #272727;
+    border: 1px solid rgba(124, 77, 255, 0.2);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 1px 2px rgba(255, 255, 255, 0.1);
+    z-index: 9999 !important;
+    font-size: 0;
+}
+
+#backtop::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-left: 2px solid #c0abff;
+    border-top: 2px solid #c0abff;
+    transform: translateY(2px) rotate(45deg);
+    transition: transform 0.3s ease;
+}
+
+#backtop:hover {
+    transform: translateY(-2px);
+    background: #1e1e1e;
+    border-color: rgba(124, 77, 255, 0.4);
+    box-shadow: 
+        0 6px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 2px rgba(255, 255, 255, 0.15);
+}
+
+#backtop:hover::before {
+    transform: translateY(0) rotate(45deg);
+}
+
+#backtop:active {
+    animation: clickEffect 0.5s ease;
+}
+
+@keyframes clickEffect {
+    0% { transform: scale(0.9); }
+    30% { transform: scale(1.1); }
+    60% { transform: scale(0.9); }
+    100% { transform: translateY(0); }
+}
+
+/* Add smooth scrolling to the whole page */
+html {
+    scroll-behavior: smooth;
+}
+/* Hide the original triangle */
+#backtop {
+    font-size: 0;
+}
+
+/* Back Home Button */
+.back-home {
+    position: fixed !important;
+    top: 2rem !important;
+    left: 2rem !important;
+    width: 40px !important;
+    height: 40px !important;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    z-index: 9998 !important;
+}
+
+.back-home::after {
+    content: '';
+    display: block;
+    width: 26px;
+    height: 26px;
+    border-left: 8px solid rgba(180, 161, 238, 0.5);  /* Changed to your purple theme color */
+    border-bottom: 8px solid rgba(180, 161, 238, 0.5);  /* Changed to your purple theme color */
+    transform: rotate(45deg);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -13px;
+    margin-top: -13px;
+    transition: border-color 0.3s ease;
+}
+
+
+
+.back-home:hover .line::before {
+    transform: scaleX(1);
+    background: rgba(150, 150, 150, 0.9);
+}
+
+.back-home:hover::after {
+    border-color: rgba(204, 193, 238, 0.8);  /* Brighter version of your theme color on hover */
+}
+
+/* Add media query for better mobile responsiveness */
+@media (max-width: 768px) {
+    .back-home {
+        top: 1rem !important;
+        left: 1rem !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    .back-home::after {
+        width: 10px;
+        height: 10px;
+        margin-left: -3px;
+        margin-top: -5px;
+    }
+}
+
+/* Animation */
+
+.content-animate {
+    transform-origin: 50% 0; /* This sets the transform origin to the top center */
+    animation: contentEnter 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    will-change: transform, opacity;
+}
+
+@keyframes contentEnter {
+    0% {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Style for links within paragraphs */
+p > a {
+    background: linear-gradient(135deg, #c0abff 20%, #9f7eff 30%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 500;
+    text-shadow: 
+        0 0 8px rgba(124, 77, 255, 0.5),
+        0 0 4px rgba(145, 123, 204, 0.15),
+        0 1px 1px rgba(253, 253, 253, 0.4);
+    position: relative;
+    display: inline-block;
+    padding: 0 0px;
+    margin: 0 1px;
+    text-decoration-color: rgba(159, 126, 255, 0.5); /* Makes the underline semi-transparent purple */
+    transition: all 0.3s ease;
+}
+
+p > a:hover {
+    text-shadow: 
+        0 0 12px rgba(124, 77, 255, 0.7),
+        0 0 4px rgba(124, 77, 255, 0.5),
+        0 2px 2px rgba(0, 0, 0, 0.3);
+    text-decoration-color: rgba(192, 171, 255, 0.7); /* Brighter underline on hover */
+}
