@@ -50,6 +50,35 @@ fetch('./romaji-to-japanese-map.json')
         }
     });
 
+// Reset overlay animations
+function resetPageState() {
+    // Remove any leftover transition elements
+    const existingContainer = document.querySelector('.transition-container');
+    const existingOverlay = document.querySelector('.transition-overlay');
+    
+    if (existingContainer) {
+        existingContainer.remove();
+    }
+    if (existingOverlay) {
+        existingOverlay.remove();
+    }
+
+    // Reset any animated columns
+    document.querySelectorAll('.column').forEach(column => {
+        column.classList.remove('exit-left', 'exit-middle', 'exit-right');
+        column.style.opacity = '1';
+        column.style.transform = 'none';
+    });
+}
+
+// Add this event listener for handling back/forward navigation
+window.onpageshow = function(event) {
+    if (event.persisted) {
+        // Page is loaded from cache (back/forward navigation)
+        resetPageState();
+    }
+};
+
 // --- Progress Bar and Counter Functions ---
 function animateProgressBar(progress) {
     progressBar.style.width = `${progress}%`;
@@ -221,6 +250,9 @@ function navigateWithTransition(event) {
     event.preventDefault();
     const targetUrl = event.currentTarget.href;
     
+    // Reset any existing transition states first
+    resetPageState();
+    
     // Create transition elements
     const transitionContainer = document.createElement('div');
     transitionContainer.className = 'transition-container';
@@ -240,14 +272,14 @@ function navigateWithTransition(event) {
     const checkAnimationsComplete = () => {
         animationsCompleted++;
         if (animationsCompleted >= totalAnimations) {
-            // All animations complete, now fade in overlay and navigate
             requestAnimationFrame(() => {
                 overlay.style.opacity = '1';
                 
-                // Wait for overlay fade to complete before navigation
                 setTimeout(() => {
+                    // Store transition state in session storage
+                    sessionStorage.setItem('isNavigating', 'true');
                     window.location.href = targetUrl;
-                }, 300); 
+                }, 300);
             });
         }
     };
@@ -263,7 +295,6 @@ function navigateWithTransition(event) {
         
         clonedColumn.classList.add(animationClass);
         
-        // Listen for both animation end events
         const handleAnimationEnd = (e) => {
             if (e.animationName === 'columnExit' || e.animationName === 'columnFade') {
                 checkAnimationsComplete();
@@ -277,9 +308,10 @@ function navigateWithTransition(event) {
     // Backup timeout in case animations fail
     setTimeout(() => {
         if (animationsCompleted < totalAnimations) {
+            sessionStorage.setItem('isNavigating', 'true');
             window.location.href = targetUrl;
         }
-    }, 1000); // Fallback timeout
+    }, 1000);
 }
 
 // --- Shift+Click Range Selection Function ---
@@ -669,12 +701,18 @@ function handleCheckAllButtonClick(checkAllBtn) {
 
 function showHelpModal() {
     helpModal.classList.add('active');
-    helpModal.focus(); 
+    // Prevent background scroll while keeping the modal scrollable
+    document.querySelector('.page-transition-container').style.overflow = 'hidden';
+    document.querySelector('.container').style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
 }
 
-// Function to hide help modal
 function hideHelpModal() {
     helpModal.classList.remove('active');
+    // Restore normal scroll behavior
+    document.querySelector('.page-transition-container').style.overflow = '';
+    document.querySelector('.container').style.overflow = '';
+    document.body.style.overflow = '';
 }
 
 
@@ -731,21 +769,22 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Help Modal handling
         if (helpModal.classList.contains('active')) {
-        const helpContent = helpModal.querySelector('.help-content'); // Add this class to your scrollable content
-        const isInHelpContent = helpContent.contains(e.target) || e.target === helpContent;
-    
-        if (!isInHelpContent) {
-        e.preventDefault(); // Prevent background scroll only when not in content area
-    } else {
-        // Allow scrolling if we're at the boundaries
-        const atTop = helpContent.scrollTop === 0;
-        const atBottom = helpContent.scrollTop + helpContent.clientHeight >= helpContent.scrollHeight;
-        
-        if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
-            e.preventDefault();
+            const helpModalBody = helpModal.querySelector('.help-modal-body');
+            
+            // Only prevent default if clicking outside the scrollable area
+            if (!helpModalBody.contains(e.target)) {
+                e.preventDefault();
+            } else {
+                // Allow natural scrolling within the modal body
+                const atTop = helpModalBody.scrollTop === 0;
+                const atBottom = helpModalBody.scrollTop + helpModalBody.clientHeight >= helpModalBody.scrollHeight;
+                
+                // Only prevent default at boundaries to prevent scroll bleed
+                if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
+                    e.preventDefault();
+                }
+            }
         }
-    }
-}
     }, { passive: false });
 
 // Checkbox Event Listeners
@@ -873,12 +912,24 @@ document.addEventListener('mousemove', () => {
     }, 10);
 });
 
+// Main keydown handler
 document.addEventListener('keydown', (event) => {
-    // Don't process search-related keyboard events if help modal is active
+    // First check if help modal is active
     if (helpModal.classList.contains('active')) {
+        // Only handle Escape and F1 for closing
+        if (event.key === 'Escape' || event.key === 'F1' || event.key === 'Help') {
+            event.preventDefault();
+            hideHelpModal();
+        }
+        // Don't prevent all keyboard events - only prevent the ones that would trigger search
+        if (event.key.length === 1 || event.key === 'Enter' || 
+            (event.ctrlKey && event.key === 'f')) {
+            event.preventDefault();
+        }
         return;
     }
 
+    // Rest of the keyboard handling for search modal
     const results = searchResults.querySelectorAll('.search-result-item');
     const hasResults = results.length > 0;
 
@@ -912,6 +963,7 @@ document.addEventListener('keydown', (event) => {
         }
     }
 
+    // Handle search modal triggers
     if (event.ctrlKey && event.key === 'f') { 
         event.preventDefault(); 
         openSearchModal(); 
@@ -922,9 +974,9 @@ document.addEventListener('keydown', (event) => {
         !event.altKey && 
         !event.target.closest('input, textarea, [contenteditable]') && 
         !searchModal.classList.contains('active')) {
-     
-         event.preventDefault();
-         openSearchModal(event.key.toLowerCase());
+        
+        event.preventDefault();
+        openSearchModal(event.key.toLowerCase());
     }
     else if (event.key === 'Escape') {
         closeSearchModal();
@@ -979,7 +1031,7 @@ document.addEventListener('keydown', (e) => {
 helpCloseBtn.addEventListener('click', hideHelpModal);
 
 helpModal.addEventListener('click', (e) => {
-    if (e.target === helpModal) {
+    if (helpModal.classList.contains('active') && event.target === helpModal) {
         hideHelpModal();
     }
 });
@@ -993,4 +1045,9 @@ searchInput.addEventListener('input', function() {
         selectedResultIndex = -1;
         debouncedSearch();
     });
+    
+    if (sessionStorage.getItem('isNavigating') === 'true') {
+        resetPageState();
+        sessionStorage.removeItem('isNavigating');
+    }
 });
