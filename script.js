@@ -125,23 +125,12 @@ function resetPageState() {
 function handlePageLoad() {
     // Check if we came here via browser back/forward
     if (performance.getEntriesByType("navigation")[0].type === 'back_forward') {
-        // Before reloading, let's sync the bookmark states
-        document.querySelectorAll('.cell label').forEach(label => {
-            const checkbox = label.querySelector('input[type="checkbox"]');
-            if (checkbox) {
-                const isBookmarked = localStorage.getItem(`bookmark-${checkbox.id}`) === 'true';
-                if (isBookmarked) {
-                    label.setAttribute('data-bookmarked', '');
-                } else {
-                    label.removeAttribute('data-bookmarked');
-                }
-            }
-        });
-        
-        // Force a fresh page load
+        // Force a fresh page load but mark it as coming from back navigation
+        sessionStorage.setItem('needsBookmarkRefresh', 'true');
         window.location.reload();
         return;
     }
+}
 }
 
 window.onpageshow = handlePageLoad;
@@ -800,6 +789,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Bookmarks from localStorage and attach context menu listener
     initializeBookmarks();
+      // Check if we need to refresh bookmarks (coming from back navigation)
+      if (sessionStorage.getItem('needsBookmarkRefresh')) {
+        sessionStorage.removeItem('needsBookmarkRefresh');
+        setTimeout(() => {
+            initializeBookmarks(); // Run it again after a small delay
+        }, 100);
+    }
 
     // Attach smooth scroll to anchor links
     document.querySelectorAll('a[href^="#"]').forEach(smoothScrollToAnchor);
