@@ -997,18 +997,9 @@ searchInput.addEventListener('input', function() {
 (function handleBackNavigation() {
     window.addEventListener('pageshow', function(event) {
         if (event.persisted) {
-            console.log("pageshow event triggered - persisted:", event.persisted); // Log event
-
-            // Remove opacity change for now, just focus on reload
-            // document.body.style.opacity = '0';
-
             setTimeout(() => {
-                console.log("Attempting location.reload()"); // Log before reload
                 location.reload();
-                console.log("location.reload() called"); // Log after reload call
             }, 100); // Slightly longer delay
-        } else {
-            console.log("pageshow event triggered - not persisted (initial load or forward)");
         }
     });
 
@@ -1017,13 +1008,4 @@ searchInput.addEventListener('input', function() {
     if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
     }
-
-    // REMOVE cache-busting for now - it's likely not helping this issue
-    // document.querySelectorAll('a').forEach(link => {
-    //     const url = new URL(link.href);
-    //     if (url.origin === location.origin) {
-    //         url.searchParams.set('cache', Date.now());
-    //         link.href = url.href;
-    //     }
-    // });
 })();
