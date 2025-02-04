@@ -71,6 +71,9 @@ function resetPageState() {
         column.style.opacity = '';
         column.style.transform = '';
         column.style.animation = '';
+        // Remove any cloned columns that might be left over
+        const clonedColumns = document.querySelectorAll('.column.exit-left, .column.exit-middle, .column.exit-right');
+        clonedColumns.forEach(clone => clone.remove());
     });
 
     // Reset all scroll-reveal elements
@@ -121,7 +124,6 @@ function resetPageState() {
     void document.documentElement.offsetHeight;
 }
 
-// Add this near the top of your script.js, after resetPageState but before other functions
 function handlePageLoad() {
     // Check if we came here via browser back/forward
     if (performance.getEntriesByType("navigation")[0].type === 'back_forward') {
