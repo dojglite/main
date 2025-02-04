@@ -764,6 +764,10 @@ function hideHelpModal() {
 
 // --- Event Listeners and Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+    const transitionContainer = document.querySelector('.transition-container');
+    const transitionOverlay = document.querySelector('.transition-overlay');
+    if (transitionContainer) transitionContainer.remove();
+    if (transitionOverlay) transitionOverlay.remove();
     // Initialize progress counter visibility with delay
     setTimeout(() => progressCounter.classList.add('visible'), 500);
 
