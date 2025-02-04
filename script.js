@@ -65,19 +65,46 @@ function resetPageState() {
 
     // Reset any animated columns
     document.querySelectorAll('.column').forEach(column => {
+        // Remove animation classes
         column.classList.remove('exit-left', 'exit-middle', 'exit-right');
-        column.style.opacity = '1';
-        column.style.transform = 'none';
+        // Reset styles
+        column.style.opacity = '';
+        column.style.transform = '';
+        column.style.animation = '';
+        // Remove any cloned columns that might be left over
+        const clonedColumns = document.querySelectorAll('.column.exit-left, .column.exit-middle, .column.exit-right');
+        clonedColumns.forEach(clone => clone.remove());
     });
+
+    // Reset the page-transition-container if it exists
+    const pageTransitionContainer = document.querySelector('.page-transition-container');
+    if (pageTransitionContainer) {
+        pageTransitionContainer.classList.remove('transitioning');
+        // Reset its styles
+        pageTransitionContainer.style.animation = '';
+        pageTransitionContainer.style.transform = '';
+        pageTransitionContainer.style.opacity = '';
+    }
+
+    // Ensure the container is visible and properly styled
+    const container = document.querySelector('.container');
+    if (container) {
+        container.style.opacity = '';
+        container.style.transform = '';
+        container.style.visibility = 'visible';
+        container.style.display = '';
+    }
 }
 
 // Add this event listener for handling back/forward navigation
 window.onpageshow = function(event) {
-    if (event.persisted) {
-        // Page is loaded from cache (back/forward navigation)
-        resetPageState();
-    }
+    resetPageState(); // Always reset, not just when persisted
 };
+
+// Also add this
+window.addEventListener('popstate', function(event) {
+    resetPageState();
+});
 
 // --- Progress Bar and Counter Functions ---
 function animateProgressBar(progress) {
@@ -1045,7 +1072,7 @@ searchInput.addEventListener('input', function() {
         selectedResultIndex = -1;
         debouncedSearch();
     });
-    
+
     if (sessionStorage.getItem('isNavigating') === 'true') {
         resetPageState();
         sessionStorage.removeItem('isNavigating');
