@@ -247,7 +247,7 @@ function navigateWithTransition(event) {
                 // Wait for overlay fade to complete before navigation
                 setTimeout(() => {
                     window.location.href = targetUrl;
-                }, 300); 
+                }, 50); 
             });
         }
     };
