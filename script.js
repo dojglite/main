@@ -29,6 +29,15 @@ const CONFIG = {
     }
 };
 
+// Utility functions for handling modal open/close
+function lockBodyScroll() {
+    document.body.classList.add('modal-open');
+}
+
+function unlockBodyScroll() {
+    document.body.classList.remove('modal-open');
+}
+
 fetch('./romaji-to-japanese-map.json')
     .then(response => {
         if (!response.ok) {
@@ -599,6 +608,7 @@ document.querySelectorAll('.column').forEach(column => {
 // Function to show the confirmation modal
 function showConfirmationModal(onConfirm, onCancel) {
     confirmationModal.classList.add('active');
+    lockBodyScroll();
     
     // Handle button clicks
     const handleYes = () => {
@@ -635,6 +645,7 @@ function showConfirmationModal(onConfirm, onCancel) {
 // Function to hide the confirmation modal
 function hideConfirmationModal() {
     confirmationModal.classList.remove('active');
+    unlockBodyScroll();
 }
 
 // Modify the existing handleCheckAllButtonClick function
@@ -679,18 +690,436 @@ function handleCheckAllButtonClick(checkAllBtn) {
 
 function showHelpModal() {
     helpModal.classList.add('active');
-    helpModal.focus(); 
+    helpModal.focus();
+    lockBodyScroll();
 }
 
 // Function to hide help modal
 function hideHelpModal() {
     helpModal.classList.remove('active');
+    unlockBodyScroll();
+}
+
+// --- Settings Functions ---
+function initSettingsSystem() {
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsCloseBtn = settingsModal.querySelector('.settings-close-btn');
+    const exportDataBtn = document.getElementById('exportDataBtn');
+    const importDataInput = document.getElementById('importDataInput');
+
+    // Show/hide settings modal
+    function showSettingsModal() {
+        settingsModal.classList.add('active');
+        lockBodyScroll();
+    }
+
+    function hideSettingsModal() {
+        settingsModal.classList.remove('active');
+        unlockBodyScroll();
+    }
+
+    // Export progress data
+    function exportProgressData() {
+        // Collect all localStorage data related to our app
+        const exportData = {
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            data: {}
+        };
+        
+        // Get checkbox states
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            // Only export our app's data (avoid exporting other site data)
+            if (key === 'hrefToCheckboxIdMap' || 
+                key.startsWith('grammar') || 
+                key.startsWith('bookmark-')) {
+                exportData.data[key] = localStorage.getItem(key);
+            }
+        }
+        
+        // Create and download the JSON file
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = 'dojg-progress-' + new Date().toISOString().split('T')[0] + '.json';
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    }
+
+    // Import progress data
+    function importProgressData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importData = JSON.parse(e.target.result);
+                
+                // Validate the data structure
+                if (!importData.version || !importData.data) {
+                    throw new Error('Invalid data format');
+                }
+                
+                // Confirmation before overwriting
+                if (confirm('This will replace your current progress data. Continue?')) {
+                    // Import the data into localStorage
+                    const data = importData.data;
+                    for (const key in data) {
+                        localStorage.setItem(key, data[key]);
+                    }
+                    
+                    // Show success message and reload
+                    alert('Data imported successfully! The page will now refresh.');
+                    location.reload();
+                }
+            } catch (error) {
+                alert('Error importing data: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+        
+        // Reset the input
+        event.target.value = '';
+    }
+
+    // Event Listeners
+    settingsBtn.addEventListener('click', function() {
+        // Make sure the toggle is correctly set when opening the modal
+        const hideEnglishToggle = document.getElementById('hideEnglishToggle');
+        if (hideEnglishToggle) {
+            hideEnglishToggle.checked = localStorage.getItem('hideEnglishTranslations') === 'true';
+        }
+        showSettingsModal();
+    });
+    settingsCloseBtn.addEventListener('click', hideSettingsModal);
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) hideSettingsModal();
+    });
+    exportDataBtn.addEventListener('click', exportProgressData);
+    importDataInput.addEventListener('change', importProgressData);
+
+    // Handle English translations visibility
+    const hideEnglishToggle = document.getElementById('hideEnglishToggle');
+
+    // Initialize toggle state from localStorage - ensure we use string comparison
+    if (hideEnglishToggle) {
+        hideEnglishToggle.checked = localStorage.getItem('hideEnglishTranslations') === 'true';
+        
+        // Toggle event handler - ensure we store strings, not boolean objects
+        hideEnglishToggle.addEventListener('change', function() {
+            localStorage.setItem('hideEnglishTranslations', this.checked ? 'true' : 'false');
+            
+            // If we're on a grammar page, apply the change immediately
+            if (window.location.href.includes('/grammar/dojg_pages/')) {
+                applyEnglishTranslationSetting();
+            }
+        });
+    }
+
+    // Add this function to handle spoiler clicks - we need this globally
+    window.revealSpoiler = function(element) {
+        if (localStorage.getItem('hideEnglishTranslations') === 'true') {
+            element.classList.toggle('revealed');
+        }
+    };
+
+    // Close settings modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && settingsModal.classList.contains('active')) {
+            hideSettingsModal();
+        }
+    });
+}
+
+// Function to apply English translation setting on grammar pages
+function applyEnglishTranslationSetting() {
+    if (window.location.href.includes('/grammar/dojg_pages/')) {
+        const hideTranslations = localStorage.getItem('hideEnglishTranslations') === 'true';
+        const spoilers = document.querySelectorAll('.english-spoiler');
+        
+        spoilers.forEach(spoiler => {
+            if (hideTranslations) {
+                spoiler.classList.remove('revealed');
+            } else {
+                spoiler.classList.add('revealed');
+            }
+        });
+    }
+}
+
+// --- Study Session Functions ---
+const STUDY_SESSION_KEY = 'dojg_study_session';
+
+// Initialize study session functionality
+function initStudySession() {
+    // Add button click listener
+    const studySessionBtn = document.getElementById('studySessionBtn');
+    if (studySessionBtn) {
+        studySessionBtn.addEventListener('click', openStudySessionModal);
+    }
+
+    // Add modal controls
+    const studySessionModal = document.getElementById('studySessionModal');
+    if (studySessionModal) {
+        const closeBtn = studySessionModal.querySelector('.settings-close-btn');
+        closeBtn.addEventListener('click', closeStudySessionModal);
+        
+        // Close on click outside
+        studySessionModal.addEventListener('click', (e) => {
+            if (e.target === studySessionModal) {
+                closeStudySessionModal();
+            }
+        });
+
+        // Start button
+        const startBtn = document.getElementById('startStudySessionBtn');
+        startBtn.addEventListener('click', startStudySession);
+    }
+
+    // Check if there's an active session
+    checkActiveSession();
+}
+
+function openStudySessionModal() {
+    const studySessionModal = document.getElementById('studySessionModal');
+    studySessionModal.classList.add('active');
+    lockBodyScroll();
+}
+
+function closeStudySessionModal() {
+    const studySessionModal = document.getElementById('studySessionModal');
+    studySessionModal.classList.remove('active');
+    unlockBodyScroll();
+}
+
+function checkActiveSession() {
+    const sessionData = localStorage.getItem(STUDY_SESSION_KEY);
+    if (sessionData) {
+        // There's an active session - add an indicator
+        const session = JSON.parse(sessionData);
+        
+        const statusIndicator = document.createElement('div');
+        statusIndicator.className = 'session-status';
+        statusIndicator.innerHTML = `
+            <span>Active Study Session: ${session.currentIndex + 1}/${session.totalItems}</span>
+            <button id="resumeSessionBtn">Resume</button>
+        `;
+        document.body.appendChild(statusIndicator);
+        
+        document.getElementById('resumeSessionBtn').addEventListener('click', () => {
+            window.location.href = session.items[session.currentIndex].url;
+        });
+    }
+}
+
+function startStudySession() {
+    // Get session configuration
+    const mode = document.getElementById('studyMode').value;
+    const count = parseInt(document.getElementById('studyItemCount').value);
+    const includeBasic = document.getElementById('studyBasic').checked;
+    const includeIntermediate = document.getElementById('studyIntermediate').checked;
+    const includeAdvanced = document.getElementById('studyAdvanced').checked;
+    
+    // Validate selection
+    if (!includeBasic && !includeIntermediate && !includeAdvanced) {
+        alert('Please select at least one difficulty level.');
+        return;
+    }
+    
+    if (count < 1 || count > 50) {
+        alert('Please select between 1 and 50 items.');
+        return;
+    }
+    
+    // Collect grammar points based on criteria
+    const grammarPoints = selectGrammarPoints(mode, count, includeBasic, includeIntermediate, includeAdvanced);
+    
+    if (grammarPoints.length === 0) {
+        alert('No grammar points match your criteria. Please adjust your settings.');
+        return;
+    }
+    
+    // Create and store session
+    const session = {
+        items: grammarPoints,
+        currentIndex: 0,
+        totalItems: grammarPoints.length,
+        mode: mode,
+        startTime: Date.now(),
+        completed: 0,
+        newChecked: 0
+    };
+    
+    localStorage.setItem(STUDY_SESSION_KEY, JSON.stringify(session));
+    
+    // Navigate to first item
+    closeStudySessionModal();
+    window.location.href = grammarPoints[0].url;
+}
+
+function selectGrammarPoints(mode, count, includeBasic, includeIntermediate, includeAdvanced) {
+    // Get all grammar point links from the page
+    const allGrammarPoints = [];
+    
+    if (includeBasic) {
+        document.querySelectorAll('#basic .cell a').forEach(link => {
+            const checkboxId = link.closest('label').querySelector('input[type="checkbox"]').id;
+            allGrammarPoints.push({
+                id: checkboxId,
+                url: link.href,
+                text: link.textContent,
+                level: 'basic',
+                checked: localStorage.getItem(checkboxId) === 'true',
+                bookmarked: localStorage.getItem(`bookmark-${checkboxId}`) === 'true'
+            });
+        });
+    }
+    
+    if (includeIntermediate) {
+        document.querySelectorAll('#intermediate .cell a').forEach(link => {
+            const checkboxId = link.closest('label').querySelector('input[type="checkbox"]').id;
+            allGrammarPoints.push({
+                id: checkboxId,
+                url: link.href,
+                text: link.textContent,
+                level: 'intermediate',
+                checked: localStorage.getItem(checkboxId) === 'true',
+                bookmarked: localStorage.getItem(`bookmark-${checkboxId}`) === 'true'
+            });
+        });
+    }
+    
+    if (includeAdvanced) {
+        document.querySelectorAll('#advanced .cell a').forEach(link => {
+            const checkboxId = link.closest('label').querySelector('input[type="checkbox"]').id;
+            allGrammarPoints.push({
+                id: checkboxId,
+                url: link.href,
+                text: link.textContent,
+                level: 'advanced',
+                checked: localStorage.getItem(checkboxId) === 'true',
+                bookmarked: localStorage.getItem(`bookmark-${checkboxId}`) === 'true'
+            });
+        });
+    }
+    
+    // Filter based on mode
+    let filteredPoints = [];
+    switch (mode) {
+        case 'new':
+            filteredPoints = allGrammarPoints.filter(point => !point.checked && !point.bookmarked);
+            break;
+        case 'viewed':
+            filteredPoints = allGrammarPoints.filter(point => point.bookmarked && !point.checked);
+            break;
+        case 'checked':
+            filteredPoints = allGrammarPoints.filter(point => point.checked);
+            break;
+        case 'random':
+            filteredPoints = allGrammarPoints;
+            break;
+    }
+    
+    // Randomize and limit to count
+    filteredPoints = shuffleArray(filteredPoints).slice(0, count);
+    
+    return filteredPoints;
+}
+
+function shuffleArray(array) {
+    // Fisher-Yates shuffle
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}
+
+function showSessionResults(session) {
+    // Calculate session stats
+    const duration = Math.floor((Date.now() - session.startTime) / 1000); // in seconds
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    
+    // Create results modal
+    const resultsModal = document.createElement('div');
+    resultsModal.className = 'settings-modal active';
+    resultsModal.innerHTML = `
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <div class="settings-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <h3>Session Complete!</h3>
+                <button class="settings-close-btn">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="settings-modal-body">
+                <div class="session-results">
+                    <h5>Session Statistics</h5>
+                    <div class="session-stat">
+                        <span class="session-stat-label">Total Items:</span>
+                        <span class="session-stat-value">${session.totalItems}</span>
+                    </div>
+                    <div class="session-stat">
+                        <span class="session-stat-label">Completed:</span>
+                        <span class="session-stat-value">${session.completed}</span>
+                    </div>
+                    <div class="session-stat">
+                        <span class="session-stat-label">New Items Checked:</span>
+                        <span class="session-stat-value">${session.newChecked}</span>
+                    </div>
+                    <div class="session-stat">
+                        <span class="session-stat-label">Time Spent:</span>
+                        <span class="session-stat-value">${minutes}m ${seconds}s</span>
+                    </div>
+                </div>
+                <div class="settings-row" style="margin-top: 1.5rem;">
+                    <button id="newSessionBtn" class="settings-action-btn">
+                        <svg viewBox="0 0 24 24" width="18" height="18" style="margin-right: 6px;">
+                            <path d="M8 5v14l11-7z" fill="currentColor"/>
+                        </svg>
+                        Start New Session
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(resultsModal);
+    
+    // Add event listeners
+    const closeBtn = resultsModal.querySelector('.settings-close-btn');
+    closeBtn.addEventListener('click', () => {
+        resultsModal.remove();
+    });
+    
+    const newSessionBtn = document.getElementById('newSessionBtn');
+    newSessionBtn.addEventListener('click', () => {
+        resultsModal.remove();
+        openStudySessionModal();
+    });
 }
 
 // --- Event Listeners and Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize progress counter visibility with delay
     setTimeout(() => progressCounter.classList.add('visible'), 500);
+
+    // Call the settings initialization
+    initSettingsSystem();
 
     // Initialize checkboxes from localStorage
     document.querySelectorAll('input[type="checkbox"]').forEach(loadCheckboxState);
@@ -703,6 +1132,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Bookmarks from localStorage and attach context menu listener
     initializeBookmarks();
+
+    initStudySession();
 
     // Attach smooth scroll to anchor links
     document.querySelectorAll('a[href^="#"]').forEach(smoothScrollToAnchor);
@@ -766,6 +1197,8 @@ document.querySelectorAll('.cell input[type="checkbox"]').forEach(checkbox => {
         lastCheckedCheckbox = checkbox; // Update lastChecked always
     });
 }); 
+
+applyEnglishTranslationSetting();
 
 // Check All Button Event Listeners
 document.querySelectorAll('.column').forEach(column => {
