@@ -1935,6 +1935,120 @@
             z-index: 1000;
             backdrop-filter: blur(5px);
             border: 1px solid rgba(124, 77, 255, 0.2);
+            transition: all 0.3s ease-in-out;
+            overflow: hidden;
+            max-height: 60px;
+        }
+        
+        /* Hide inner content when collapsed - faster transition */
+        .study-session-nav .session-progress,
+        .study-session-nav .session-controls,
+        .study-session-nav .session-exit {
+            transition: opacity 0.15s ease-out, visibility 0s 0.15s;
+        }
+        
+        .study-session-nav.collapsed .session-progress,
+        .study-session-nav.collapsed .session-controls,
+        .study-session-nav.collapsed .session-exit {
+            opacity: 0;
+            visibility: hidden;
+            height: 0;
+            margin: 0;
+            padding: 0;
+            pointer-events: none;
+        }
+
+        .study-session-nav.collapsed {
+            max-height: 4px;
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            overflow: hidden;
+            bottom: 50px;
+        }
+
+        .study-session-nav:not(.collapsed) {
+            border: 1px solid rgba(0, 0, 0, 0.9); /* Purple border when expanded */
+            outline: none;
+        }
+
+        .study-session-nav::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                rgba(124, 77, 255, 0) 0%, 
+                rgba(124, 77, 255, 0.7) 20%, 
+                rgba(124, 77, 255, 0.7) 80%, 
+                rgba(124, 77, 255, 0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(124, 77, 255, 0.5);
+        }
+
+        .study-session-nav.collapsed::before {
+            opacity: 1;
+        }
+        
+        .study-session-nav-hover-area {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            z-index: 999;
+            cursor: pointer;
+        }
+
+        /* Mobile drag indicator */
+        .study-session-nav-drag-indicator {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: rgba(124, 77, 255, 0.5);
+            border-radius: 2px;
+            cursor: grab;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0s 0.3s; /* Update transition */
+        }
+
+        .study-session-nav.collapsed .study-session-nav-drag-indicator {
+            opacity: 1;
+            visibility: visible; /* Add this line */
+            top: 0; /* Move it to the exact top */
+            transition: opacity 0.3s ease, visibility 0s; /* Update transition */
+        }
+
+        .study-session-nav:hover,
+        .study-session-nav:focus,
+        .study-session-nav:active,
+        .study-session-nav-hover-area:hover,
+        .study-session-nav-hover-area:focus,
+        .study-session-nav-hover-area:active,
+        .study-session-nav *:hover,
+        .study-session-nav *:focus,
+        .study-session-nav *:active {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Ensure no outline when navigating with keyboard */
+        .study-session-nav:focus-visible,
+        .study-session-nav *:focus-visible {
+            outline: none !important;
+        }
+
+        /* Replace hover effect with a better looking purple border */
+        .study-session-nav:not(.collapsed):hover {
+            border: 1px solid rgba(124, 77, 255, 0.8);
         }
 
         .session-progress {
@@ -2142,311 +2256,355 @@
         }
 
         /* ===== RESPONSIVE DESIGN ===== */
-/* Large tablets (768px - 1024px) */
-@media screen and (max-width: 1024px) {
-    :root {
-        font-size: 18px;
+        /* Large tablets (768px - 1024px) */
+    @media screen and (max-width: 1024px) {
+        :root {
+            font-size: 18px;
+        }
+        
+        .container {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            padding: 0 1.2rem;
+        }
+        
+        .column-header h3 {
+            font-size: 1.3rem;
+        }
+        
+        .progress-container {
+            padding: 1rem 0;
+        }
+        
+        .progress-track {
+            width: 70%;
+        }
+        
+        #progress-counter {
+            font-size: 1rem;
+        }
+        
+        /* Position the buttons properly */
+        .settings-btn, .study-session-btn {
+            transform: scale(0.9);
+        }
+        
+        .study-session-btn {
+            right: 4.5rem;
+        }
     }
-    
-    .container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-        padding: 0 1.2rem;
-    }
-    
-    .column-header h3 {
-        font-size: 1.3rem;
-    }
-    
-    .progress-container {
-        padding: 1rem 0;
-    }
-    
-    .progress-track {
-        width: 70%;
-    }
-    
-    #progress-counter {
-        font-size: 1rem;
-    }
-    
-    /* Position the buttons properly */
-    .settings-btn, .study-session-btn {
-        transform: scale(0.9);
-    }
-    
-    .study-session-btn {
-        right: 4.5rem;
-    }
-}
 
-/* Small tablets (480px - 768px) */
-@media screen and (max-width: 768px) {
-    :root {
-        font-size: 16px;
-    }
-    
-    body {
-        font-size: 20px;
-    }
-    
-    .container {
-        grid-template-columns: 1fr;
-        gap: 1.2rem;
-        padding: 0 1rem;
-        margin: 1.5rem auto;
-    }
-    
-    .column {
-        padding: 1.2rem;
-    }
-    
-    h3 {
-        font-size: 1.25rem;
-    }
-    
-    .progress-track {
-        width: 90%;
-        height: 10px;
-    }
-    
-    .progress-percentage {
-        right: -40px;
-        font-size: 0.95rem;
-    }
-    
-    .back-home {
-        top: 1rem !important;
-        left: 1rem !important;
-        width: 32px !important;
-        height: 32px !important;
-    }
-    
-    .back-home::after {
-        width: 10px;
-        height: 10px;
-        margin-left: -3px;
-        margin-top: -5px;
-    }
-    
-    .cell label {
-        padding: 0.6rem 0.8rem;
-    }
-    
-    /* Modals */
-    .confirmation-modal-content,
-    .settings-modal-content,
-    .help-modal-content {
-        width: 90%;
-        margin: 0 1rem;
-        max-height: 80vh;
-    }
-    
-    /* Button positioning */
-    .settings-btn {
-        top: 1rem;
-        right: 1rem;
-        width: 36px;
-        height: 36px;
-        position: fixed; /* Ensure fixed positioning */
-    }
-    
-    .study-session-btn {
-        top: 1rem;
-        right: 4rem; /* Reduced from 4.5rem to 4rem */
-        width: 36px;
-        height: 36px;
-        position: fixed; /* Ensure fixed positioning */
-    }
-    
-    /* Search functionality */
-    .search-container {
-        bottom: 2rem;
-    }
-    
-    #searchInputContainer {
-        width: 85%;
-    }
-    
-    #searchInput {
-        width: calc(100% - 2.5rem);
-        font-size: 0.9rem;
-    }
-    
-    .search-modal-content {
-        width: 85%;
-        margin: 10vh auto 0;
-    }
-    
-    /* Study session */
-    .study-session-nav {
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 0.5rem;
-        width: 90%;
-    }
-    
-    .session-controls {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .session-exit {
-        width: 100%;
-    }
-    
-    .difficulty-toggles {
-        flex-direction: column;
-    }
-}
+    /* Small tablets (480px - 768px) */
+    @media screen and (max-width: 768px) {
+        :root {
+            font-size: 16px;
+        }
+        
+        body {
+            font-size: 20px;
+        }
+        
+        .container {
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+            padding: 0 1rem;
+            margin: 1.5rem auto;
+        }
+        
+        .column {
+            padding: 1.2rem;
+        }
+        
+        h3 {
+            font-size: 1.25rem;
+        }
+        
+        .progress-track {
+            width: 90%;
+            height: 10px;
+        }
+        
+        .progress-percentage {
+            right: -40px;
+            font-size: 0.95rem;
+        }
+        
+        .back-home {
+            top: 1rem !important;
+            left: 1rem !important;
+            width: 32px !important;
+            height: 32px !important;
+        }
+        
+        .back-home::after {
+            width: 10px;
+            height: 10px;
+            margin-left: -3px;
+            margin-top: -5px;
+        }
+        
+        .cell label {
+            padding: 0.6rem 0.8rem;
+        }
+        
+        /* Modals */
+        .confirmation-modal-content,
+        .settings-modal-content,
+        .help-modal-content {
+            width: 90%;
+            margin: 0 1rem;
+            max-height: 80vh;
+        }
+        
+        /* Button positioning */
+        .settings-btn {
+            top: 3rem;
+            right: 1rem;
+            width: 36px;
+            height: 36px;
+            position: fixed; /* Ensure fixed positioning */
+        }
+        
+        .study-session-btn {
+            top: 3rem;
+            right: 4rem; /* Reduced from 4.5rem to 4rem */
+            width: 36px;
+            height: 36px;
+            position: fixed; /* Ensure fixed positioning */
+        }
+        
+        /* Search functionality */
+        .search-container {
+            bottom: 2rem;
+        }
+        
+        #searchInputContainer {
+            width: 85%;
+        }
+        
+        #searchInput {
+            width: calc(100% - 2.5rem);
+            font-size: 0.9rem;
+        }
+        
+        .search-modal-content {
+            width: 85%;
+            margin: 10vh auto 0;
+        }
+        
+        html body #backtop {
+            position: fixed !important;
+            bottom: 5rem !important; 
+            right: 1rem !important;
+            width: 2.5rem !important;
+            height: 2.5rem !important;
+            opacity: 0.8 !important;
+            z-index: 1050 !important; /* Ensure it's above other elements */
+        }
+        
+        /* Position the study session nav to avoid overlap */
+        .study-session-nav {
+            padding: 0.8rem 0.6rem !important;
+            bottom: 0.75rem !important;
+            width: 90% !important;
+            z-index: 1000 !important;
+        }
 
-/* Mobile phones (below 480px) */
-@media screen and (max-width: 480px) {
-    :root {
-        font-size: 14px;
-    }
-    
-    body {
-        font-size: 18px;
-    }
-    
-    .container {
-        margin: 1rem auto;
-        padding: 0 0.8rem;
-    }
-    
-    .column {
-        padding: 1rem;
-        border-radius: 12px;
-    }
-    
-    h3 {
-        font-size: 1.2rem;
-        margin-bottom: 1.2rem;
-    }
-    
-    .column-header {
-        margin-bottom: 0.8rem;
-    }
-    
-    .cell {
-        margin: 0.5rem 0;
-    }
-    
-    .cell label {
-        padding: 0.5rem 0.7rem;
-    }
-    
-    .check-all-button-wrapper {
-        transform: translateY(-15px);
-    }
-    
-    .column-actions button.check-all-btn {
-        width: 36px;
-        height: 36px;
-    }
-    
-    /* Buttons positioning for very small screens */
-    .settings-btn {
-        top: 0.8rem;
-        right: 0.8rem;
-        width: 32px;
-        height: 32px;
-    }
-    
-    .study-session-btn {
-        top: 0.8rem;
-        right: 3.5rem; /* Reduced spacing */
-        width: 32px;
-        height: 32px;
-    }
-    
-    #progress-counter {
-        bottom: 15px;
-        right: 15px;
-        padding: 0.4rem 0.8rem;
-        font-size: 0.9rem;
-    }
-    
-    /* Search functionality */
-    .search-container {
-        bottom: 1.5rem;
-        left: 1rem;
-    }
-    
-    #searchInput {
-        padding: 0.6rem 1rem;
-        width: calc(100% - 2rem);
-    }
-    
-    .search-modal-content {
-        width: 92%;
-        height: 60vh;
-    }
-    
-    /* Modals */
-    .confirmation-modal-content,
-    .settings-modal-content,
-    .help-modal-content {
-        width: 95%;
-        border-radius: 12px;
-    }
-    
-    .confirmation-modal-header,
-    .settings-modal-header,
-    .help-modal-header {
-        padding: 0.8rem 1rem;
-    }
-    
-    .confirmation-modal-body,
-    .settings-modal-body,
-    .help-modal-body {
-        padding: 1rem;
-    }
-    
-    .feature-desc, .shortcut-desc {
-        font-size: 0.95rem;
-    }
-    
-    .feature-detail, .shortcut-key {
-        font-size: 0.9rem;
-    }
-    
-    /* Session status */
-    .session-status {
-        top: 75px;
-        right: 15px;
-        font-size: 0.9rem;
-        padding: 0.4rem 0.6rem;
-    }
-}
+        .study-session-nav.collapsed {
+            max-height: 12px;
+        }
+        
+        .study-session-nav-drag-indicator {
+            width: 60px;
+        }
+        
+        .study-session-nav-hover-area {
+            height: 40px;
+            bottom: 15px;
+        }
+        
+        .session-controls {
+            width: 100%;
+            justify-content: space-between;
+        }
 
-/* Extra small devices */
-@media screen and (max-width: 360px) {
-    .study-session-btn {
-        right: 3.5rem;
+        .session-status {
+            top: 3rem;
+        }
+
+        .session-exit {
+            width: 100%;
+        }
+        
+        .difficulty-toggles {
+            flex-direction: column;
+        }
     }
-    
-    .search-container {
-        width: 90%;
+
+    /* Mobile phones (below 480px) */
+    @media screen and (max-width: 480px) {
+        :root {
+            font-size: 14px;
+        }
+        
+        body {
+            font-size: 18px;
+        }
+        
+        .container {
+            margin: 1rem auto;
+            padding: 0 0.8rem;
+        }
+        
+        .column {
+            padding: 1rem;
+            border-radius: 12px;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+        
+        .column-header {
+            margin-bottom: 0.8rem;
+        }
+        
+        .cell {
+            margin: 0.5rem 0;
+        }
+        
+        .cell label {
+            padding: 0.5rem 0.7rem;
+        }
+        
+        .check-all-button-wrapper {
+            transform: translateY(-15px);
+        }
+        
+        .column-actions button.check-all-btn {
+            width: 36px;
+            height: 36px;
+        }
+        
+        /* Buttons positioning for very small screens */
+        .settings-btn {
+            top: 4rem;
+            right: 0.8rem;
+            width: 32px;
+            height: 32px;
+        }
+        
+        .study-session-btn {
+            top: 4rem;
+            right: 3.5rem; /* Reduced spacing */
+            width: 32px;
+            height: 32px;
+        }
+
+        html body #backtop {
+            width: 2.2rem !important;
+            height: 2.2rem !important;
+            right: 0.75rem !important;
+        }
+        
+        /* Make session nav even more compact */
+        .study-session-nav {
+            padding: 0.5rem 0.6rem;
+        }
+        
+        .session-controls button,
+        .session-exit {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        #progress-counter {
+            bottom: 15px;
+            right: 15px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Search functionality */
+        .search-container {
+            bottom: 1.5rem;
+            left: 1rem;
+        }
+        
+        #searchInput {
+            padding: 0.6rem 1rem;
+            width: calc(100% - 2rem);
+        }
+        
+        .search-modal-content {
+            width: 92%;
+            height: 60vh;
+        }
+        
+        /* Modals */
+        .confirmation-modal-content,
+        .settings-modal-content,
+        .help-modal-content {
+            width: 95%;
+            border-radius: 12px;
+        }
+        
+        .confirmation-modal-header,
+        .settings-modal-header,
+        .help-modal-header {
+            padding: 0.8rem 1rem;
+        }
+        
+        .confirmation-modal-body,
+        .settings-modal-body,
+        .help-modal-body {
+            padding: 1rem;
+        }
+        
+        .feature-desc, .shortcut-desc {
+            font-size: 0.95rem;
+        }
+        
+        .feature-detail, .shortcut-key {
+            font-size: 0.9rem;
+        }
+        
+        /* Session status */
+        .session-status {
+            top: 90px;
+            right: 15px;
+            font-size: 0.9rem;
+            padding: 0.4rem 0.6rem;
+        }
     }
-    
-    #searchInput {
-        width: calc(100% - 2rem);
+
+    /* Extra small devices */
+    @media screen and (max-width: 360px) {
+        .study-session-btn {
+            right: 3.5rem;
+        }
+        
+        .search-container {
+            width: 90%;
+        }
+        
+        #searchInput {
+            width: calc(100% - 2rem);
+        }
+        
+        .column-actions button.check-all-btn {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .cell input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-right: 0.7rem;
+        }
+        
+        .cell input[type="checkbox"]:checked::after {
+            transform: translate(-50%, -50%) scale(0.8);
+        }
     }
-    
-    .column-actions button.check-all-btn {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .cell input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
-        margin-right: 0.7rem;
-    }
-    
-    .cell input[type="checkbox"]:checked::after {
-        transform: translate(-50%, -50%) scale(0.8);
-    }
-}

@@ -183,6 +183,146 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.body.appendChild(navBar);
     
+    // Add this function right after document.body.appendChild(navBar);
+    function makeStudySessionNavCollapsible() {
+        const nav = navBar; // Use the navBar from the parent scope
+        
+        // Add drag indicator for mobile
+        const dragIndicator = document.createElement('div');
+        dragIndicator.className = 'study-session-nav-drag-indicator';
+        nav.appendChild(dragIndicator);
+        
+        // Add hover area
+        const hoverArea = document.createElement('div');
+        hoverArea.className = 'study-session-nav-hover-area';
+        document.body.appendChild(hoverArea);
+        
+        // Pre-hide elements before collapsing for smoother transition
+        const preCollapse = () => {
+            const elements = nav.querySelectorAll('.session-progress, .session-controls, .session-exit');
+            elements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.visibility = 'hidden';
+            });
+            
+            // Hide drag indicator before collapse (for desktop)
+            if (!('ontouchstart' in window)) {
+                dragIndicator.style.opacity = '0';
+                dragIndicator.style.visibility = 'hidden';
+            }
+            
+            // Slight delay before actually collapsing the container
+            setTimeout(() => {
+                nav.classList.add('collapsed');
+                
+                // Show drag indicator after collapse (for mobile only)
+                if ('ontouchstart' in window) {
+                    dragIndicator.style.opacity = '1';
+                    dragIndicator.style.visibility = 'visible';
+                }
+            }, 50);
+        };
+        
+        const expand = () => {
+            nav.classList.remove('collapsed');
+            // Show elements after expanding
+            setTimeout(() => {
+                const elements = nav.querySelectorAll('.session-progress, .session-controls, .session-exit');
+                elements.forEach(el => {
+                    el.style.opacity = '1';
+                    el.style.visibility = 'visible';
+                });
+            }, 50);
+        };
+        
+        // Auto collapse after 5 seconds initially
+        let autoCollapseTimer = setTimeout(preCollapse, 5000);
+        
+        // Hover behavior for desktop
+        hoverArea.addEventListener('mouseenter', () => {
+            if (nav.classList.contains('collapsed')) {
+                expand();
+            }
+        });
+        
+        nav.addEventListener('mouseenter', () => {
+            clearTimeout(autoCollapseTimer);
+            if (nav.classList.contains('collapsed')) {
+                expand();
+            }
+        });
+        
+        nav.addEventListener('mouseleave', () => {
+            clearTimeout(autoCollapseTimer);
+            autoCollapseTimer = setTimeout(preCollapse, 1000);
+        });
+        
+        // Handle clicks on navigation buttons
+        const navButtons = nav.querySelectorAll('button');
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                clearTimeout(autoCollapseTimer);
+                autoCollapseTimer = setTimeout(preCollapse, 1000);
+            });
+        });
+        
+        // Mobile drag behavior
+        let touchStartY = 0;
+        let touchEndY = 0;
+        
+        nav.addEventListener('touchstart', (e) => {
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+        
+        nav.addEventListener('touchmove', (e) => {
+            touchEndY = e.changedTouches[0].screenY;
+            const diff = touchStartY - touchEndY;
+            
+            // If dragging up, expand the nav
+            if (diff > 10 && nav.classList.contains('collapsed')) {
+                expand();
+                clearTimeout(autoCollapseTimer);
+                autoCollapseTimer = setTimeout(preCollapse, 5000);
+            }
+            
+            // If dragging down, collapse the nav
+            if (diff < -10 && !nav.classList.contains('collapsed')) {
+                preCollapse();
+            }
+        }, { passive: true });
+        
+        // Adjust backtop button position when nav expands/collapses
+        const adjustBackTopButton = () => {
+            const backtop = document.getElementById('backtop');
+            if (!backtop) return;
+            
+            if (nav.classList.contains('collapsed')) {
+                backtop.style.bottom = '20px'; // Default position
+            } else {
+                // Adjust based on the nav height
+                const navHeight = nav.offsetHeight;
+                backtop.style.bottom = `${navHeight + 30}px`;
+            }
+        };
+        
+        // Watch for class changes on the nav element
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    adjustBackTopButton();
+                }
+            });
+        });
+        
+        observer.observe(nav, { attributes: true });
+        
+        // Initial adjustment
+        adjustBackTopButton();
+    }
+
+    // Call the function to initialize
+    makeStudySessionNavCollapsible();
+    
     // Add event listeners
     if (currentIndex > 0) {
         navBar.querySelector('.session-prev').addEventListener('click', () => {
@@ -212,9 +352,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         </svg>
                     </div>
                     <h3>Exit study session?</h3>
-                </div>
-                <div class="confirmation-modal-body">
-                    Your progress will be saved.
                 </div>
                 <div class="confirmation-modal-footer">
                     <button class="confirm-btn confirm-no">Cancel</button>
