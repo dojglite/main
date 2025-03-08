@@ -721,37 +721,43 @@ function initSettingsSystem() {
 
     // Export progress data
     function exportProgressData() {
-        // Collect all localStorage data related to our app
-        const exportData = {
-            version: '1.0',
-            exportDate: new Date().toISOString(),
-            data: {}
-        };
-        
-        // Get checkbox states
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            // Only export our app's data (avoid exporting other site data)
-            if (key === 'hrefToCheckboxIdMap' || 
-                key.startsWith('grammar') || 
-                key.startsWith('bookmark-')) {
-                exportData.data[key] = localStorage.getItem(key);
+        try {
+            // Collect all localStorage data related to our app
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                data: {}
+            };
+            
+            // Get checkbox states
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // Only export our app's data (avoid exporting other site data)
+                if (key === 'hrefToCheckboxIdMap' || 
+                    key.startsWith('grammar') || 
+                    key.startsWith('bookmark-') ||
+                    key === STUDY_SESSION_KEY) {
+                    exportData.data[key] = localStorage.getItem(key);
+                }
             }
+            
+            // Create and download the JSON file
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'dojg-progress-' + new Date().toISOString().split('T')[0] + '.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert('Failed to export data: ' + error.message);
         }
-        
-        // Create and download the JSON file
-        const dataStr = JSON.stringify(exportData, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
-        const exportFileDefaultName = 'dojg-progress-' + new Date().toISOString().split('T')[0] + '.json';
-        
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
     }
 
-    // Import progress data
+    // Import and merge progress data
     function importProgressData(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -766,22 +772,111 @@ function initSettingsSystem() {
                     throw new Error('Invalid data format');
                 }
                 
-                // Confirmation before overwriting
-                if (confirm('This will replace your current progress data. Continue?')) {
-                    // Import the data into localStorage
+                // Confirmation before merging
+                if (confirm('Your current progress will be merged with the imported data. Continue?')) {
+                    // Track statistics for user feedback
+                    let stats = {
+                        totalItems: 0,
+                        newlyCompleted: 0,
+                        newlyBookmarked: 0,
+                        unchanged: 0
+                    };
+                    
+                    // Merge the data into localStorage
                     const data = importData.data;
-                    for (const key in data) {
-                        localStorage.setItem(key, data[key]);
+                    
+                    // First, handle the mapping data (special case)
+                    if (data['hrefToCheckboxIdMap']) {
+                        try {
+                            const importedMap = new Map(JSON.parse(data['hrefToCheckboxIdMap']));
+                            const existingMap = new Map(JSON.parse(localStorage.getItem('hrefToCheckboxIdMap') || '[]'));
+                            
+                            // Merge maps, preferring existing entries in case of conflict
+                            const mergedMap = new Map([...importedMap, ...existingMap]);
+                            localStorage.setItem('hrefToCheckboxIdMap', JSON.stringify([...mergedMap]));
+                        } catch (err) {
+                            console.error('Error merging URL mapping:', err);
+                        }
                     }
                     
-                    // Show success message and reload
-                    alert('Data imported successfully! The page will now refresh.');
-                    location.reload();
+                    // Then process all other items
+                    for (const key in data) {
+                        if (key === 'hrefToCheckboxIdMap') continue; // Already handled
+                        
+                        stats.totalItems++;
+                        
+                        // Handle grammar checkboxes (completed state)
+                        if (key.match(/^grammar\d+$/)) {
+                            const existingValue = localStorage.getItem(key);
+                            const importedValue = data[key];
+                            
+                            // If either the existing or imported state is 'true', set to 'true'
+                            // (completed state wins)
+                            if (importedValue === 'true' && existingValue !== 'true') {
+                                localStorage.setItem(key, 'true');
+                                stats.newlyCompleted++;
+                            } else if (existingValue === importedValue) {
+                                stats.unchanged++;
+                            }
+                        }
+                        // Handle bookmarks
+                        else if (key.startsWith('bookmark-')) {
+                            const existingValue = localStorage.getItem(key);
+                            const importedValue = data[key];
+                            
+                            // If either the existing or imported state is 'true', set to 'true'
+                            // (bookmarked state wins)
+                            if (importedValue === 'true' && existingValue !== 'true') {
+                                localStorage.setItem(key, 'true');
+                                stats.newlyBookmarked++;
+                            } else if (existingValue === importedValue) {
+                                stats.unchanged++;
+                            }
+                        }
+                        // Handle study session
+                        else if (key === STUDY_SESSION_KEY) {
+                            // Only import if there's no active session or user confirms
+                            if (!localStorage.getItem(STUDY_SESSION_KEY) || 
+                                confirm('Active study session detected. Import the session from the backup instead?')) {
+                                localStorage.setItem(key, data[key]);
+                            }
+                        }
+                        // Handle other app settings
+                        else {
+                            // For general settings, imported data wins if it exists
+                            localStorage.setItem(key, data[key]);
+                        }
+                    }
+                    
+                    // Show success message with stats
+                    alert(
+                        `Data merged successfully!\n\n` +
+                        `Total items processed: ${stats.totalItems}\n` +
+                        `Newly completed items: ${stats.newlyCompleted}\n` +
+                        `Newly bookmarked items: ${stats.newlyBookmarked}\n` +
+                        `Unchanged items: ${stats.unchanged}\n\n` +
+                        `The page will now refresh to apply changes.`
+                    );
+                    
+                    // Reload the page to apply changes
+                    try {
+                        location.reload();
+                    } catch (reloadErr) {
+                        console.error('Error reloading page:', reloadErr);
+                        alert('Please refresh the page manually to see the changes.');
+                    }
                 }
             } catch (error) {
+                console.error('Error importing data:', error);
                 alert('Error importing data: ' + error.message);
             }
         };
+        
+        reader.onerror = function(error) {
+            console.error('File reading error:', error);
+            alert('Failed to read the file. Please try again.');
+        };
+        
         reader.readAsText(file);
         
         // Reset the input

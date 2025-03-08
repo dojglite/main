@@ -1,3 +1,7 @@
+    * {
+        background-clip: padding-box;
+    }
+
 @font-face {
             font-family: 'TsukuMinPr6N-R';
             src: url('FOT-TsukuMinPr6N-R.otf') format('opentype');
@@ -6,6 +10,10 @@
         @font-face {
             font-family: 'BIZUDGothic-Regular';
             src: url('BIZUDGothic-Regular.woff') format('woff'),
+        }
+
+        html, body {
+            background-color: #121212; 
         }
 
         /* --- Root Variables (CSS Custom Properties) --- */
@@ -27,7 +35,7 @@
 
         /* --- Global Styles --- */
         body {
-            background-color: var(--background);
+            background-color: #121212; 
             background: linear-gradient(
                 45deg,
                 #121212,
@@ -93,6 +101,9 @@
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 2rem;
             position: relative;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: transform;
         }
 
         .column {
@@ -107,6 +118,7 @@
             position: relative;
             overflow: hidden;
             perspective: 1000px;
+            contain: paint;
         }
 
         .column:hover {
@@ -2254,6 +2266,7 @@
             overflow: hidden;
             height: 100vh;
         }
+        
 
         /* ===== RESPONSIVE DESIGN ===== */
         /* Large tablets (768px - 1024px) */
