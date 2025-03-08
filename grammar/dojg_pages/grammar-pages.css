@@ -452,6 +452,28 @@ p > a:hover {
     .dojgimg {
         max-width: 100%;
     }
+    
+    .dojgprev, .dojgnext {
+        margin: 0;
+        padding: 0;
+        width: 45%;
+    }
+    
+    .dojgprev {
+        float: left;
+        text-align: left;
+    }
+    
+    .dojgnext {
+        float: right;
+        text-align: right;
+    }
+    
+    .dojgprev a, .dojgnext a {
+        float: none;
+        display: inline-block;
+        margin-top: 0;
+    }
 }
 
 /* Small tablets (480px - 768px) */
@@ -479,6 +501,28 @@ p > a:hover {
     
     table.dojgtab td {
         padding: 0.7em;
+    }
+
+    .dojgprev, .dojgnext {
+        margin: 0;
+        padding: 0;
+        width: 45%;
+    }
+    
+    .dojgprev {
+        float: left;
+        text-align: left;
+    }
+    
+    .dojgnext {
+        float: right;
+        text-align: right;
+    }
+    
+    .dojgprev a, .dojgnext a {
+        float: none;
+        display: inline-block;
+        margin-top: 0;
     }
     
     .back-home {
@@ -528,11 +572,25 @@ p > a:hover {
     }
     
     .dojgprev, .dojgnext {
-        width: 50%;
+        margin: 0;
+        padding: 0;
+        width: 45%;
+    }
+    
+    .dojgprev {
+        float: left;
+        text-align: left;
+    }
+    
+    .dojgnext {
+        float: right;
+        text-align: right;
     }
     
     .dojgprev a, .dojgnext a {
-        font-size: 0.9em;
+        float: none;
+        display: inline-block;
+        margin-top: 0;
     }
 
     ul.tod {
