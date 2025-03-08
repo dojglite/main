@@ -285,22 +285,6 @@ li.tod:hover {
     background: rgba(124, 77, 255, 0.7);
 }
 
-/* --- Media Queries --- */
-@media (max-width: 768px) {
-    :root {
-        font-size: 16px;
-    }
-
-    .bodymargin {
-        padding: 0 1rem;
-        margin: 1rem;
-    }
-
-    table.dojgtab {
-        margin: 1em 0;
-        width: 100%;
-    }
-}
 /* Back to Top Button */
 #backtop {
     position: fixed !important;
@@ -407,23 +391,6 @@ html {
     border-color: rgba(204, 193, 238, 0.8);  /* Brighter version of your theme color on hover */
 }
 
-/* Add media query for better mobile responsiveness */
-@media (max-width: 768px) {
-    .back-home {
-        top: 1rem !important;
-        left: 1rem !important;
-        width: 32px !important;
-        height: 32px !important;
-    }
-    
-    .back-home::after {
-        width: 10px;
-        height: 10px;
-        margin-left: -3px;
-        margin-top: -5px;
-    }
-}
-
 /* Animation */
 
 .content-animate {
@@ -468,4 +435,140 @@ p > a:hover {
         0 0 4px rgba(124, 77, 255, 0.5),
         0 2px 2px rgba(0, 0, 0, 0.3);
     text-decoration-color: rgba(192, 171, 255, 0.7); /* Brighter underline on hover */
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+/* Large tablets (768px - 1024px) */
+@media screen and (max-width: 1024px) {
+    :root {
+        font-size: 22px;
+    }
+    
+    .bodymargin {
+        max-width: 90%;
+        padding: 0 1.2rem;
+    }
+    
+    .dojgimg {
+        max-width: 100%;
+    }
+}
+
+/* Small tablets (480px - 768px) */
+@media screen and (max-width: 768px) {
+    :root {
+        font-size: 18px;
+    }
+    
+    .bodymargin {
+        max-width: 95%;
+        padding: 0 1rem;
+        margin: 1rem;
+        border-radius: 12px;
+    }
+    
+    .structure {
+        font-size: 1.6em;
+    }
+    
+    table.dojgtab {
+        margin: 0.8em 0;
+        width: 100%;
+        font-size: 0.85em;
+    }
+    
+    table.dojgtab td {
+        padding: 0.7em;
+    }
+    
+    .back-home {
+        top: 0.8rem;
+        left: 0.8rem;
+    }
+    
+    #backtop {
+        right: 1rem;
+        bottom: 1rem;
+    }
+}
+
+/* Mobile phones (below 480px) */
+@media screen and (max-width: 480px) {
+    :root {
+        font-size: 16px;
+    }
+    
+    body {
+        font-size: 22px;
+    }
+    
+    .bodymargin {
+        padding: 0 0.8rem;
+        margin: 0.8rem;
+        border-radius: 10px;
+        max-width: 100%;
+    }
+    
+    .structure {
+        font-size: 1.5em;
+        margin: 0.7em 0;
+    }
+    
+    h4 {
+        font-size: 1.1em;
+    }
+    
+    table.dojgtab {
+        font-size: 0.8em;
+        margin: 0.5em 0;
+    }
+    
+    table.dojgtab td {
+        padding: 0.6em;
+    }
+    
+    .dojgprev, .dojgnext {
+        width: 50%;
+    }
+    
+    .dojgprev a, .dojgnext a {
+        font-size: 0.9em;
+    }
+
+    ul.tod {
+        padding: 0.1em;
+        margin-left: 0.4em;
+    }
+
+    li.tod {
+        padding: 0.4em 0.8em;
+    }
+    
+    hr.dotted {
+        margin: 20px 0;
+    }
+}
+
+/* Extra small devices */
+@media screen and (max-width: 360px) {
+    :root {
+        font-size: 14px;
+    }
+    
+    body {
+        font-size: 20px;
+    }
+    
+    .bodymargin {
+        padding: 0 0.5rem;
+        margin: 0.5rem;
+    }
+    
+    table.dojgtab {
+        font-size: 0.75em;
+    }
+    
+    table.dojgtab td {
+        padding: 0.5em;
+    }
 }
